@@ -11,9 +11,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Pencil, Archive, ArchiveRestore, Loader2 } from 'lucide-react';
+import { MoreHorizontal, Pencil, Archive, ArchiveRestore, Loader2, Trash2 } from 'lucide-react';
 import Link from 'next/link';
-import { archiveHabitAction, unarchiveHabitAction } from '@/lib/actions/habit-actions';
+import {
+  archiveHabitAction,
+  deleteHabitAction,
+  unarchiveHabitAction,
+} from '@/lib/actions/habit-actions';
 
 interface HabitCardProps {
   habit: SelectHabit;
@@ -49,6 +53,18 @@ export function HabitCard({ habit, isArchived = false }: HabitCardProps) {
         if (result.error) setError(result.error);
       } catch {
         setError('Could not change this habit. Try again.');
+      }
+    });
+  }
+
+  function handleDelete() {
+    setError('');
+    startTransition(async () => {
+      try {
+        const result = await deleteHabitAction(habit.id);
+        if (result.error) setError(result.error);
+      } catch {
+        setError('Could not delete this habit. Try again.');
       }
     });
   }
@@ -120,6 +136,14 @@ export function HabitCard({ habit, isArchived = false }: HabitCardProps) {
                     Archive
                   </>
                 )}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onSelect={handleDelete}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete habit
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

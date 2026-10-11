@@ -1,6 +1,6 @@
 import { eq, and, asc, gte } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { habitScheduleRevisions, habits } from '@/lib/db/schema';
+import { dayPlans, habitScheduleRevisions, habits, lifeOsSeedItems } from '@/lib/db/schema';
 import type { HabitCreateInput, HabitUpdateInput } from '@/lib/validations/habit';
 import { habitRuleOn } from '@/lib/analytics/habit-month-progress';
 
@@ -217,6 +217,34 @@ export const archiveHabit = (habitId: string, userId: string, effectiveDate: str
  */
 export const unarchiveHabit = (habitId: string, userId: string, effectiveDate: string) =>
   setArchived(habitId, userId, false, effectiveDate);
+
+/** Permanently remove an owned habit and its history. Preserve preset deletion intent. */
+export async function deleteHabit(habitId: string, userId: string) {
+  return db.transaction(async (tx) => {
+    const [habit] = await tx
+      .select({ id: habits.id, templateKey: habits.templateKey })
+      .from(habits)
+      .where(and(eq(habits.id, habitId), eq(habits.userId, userId)))
+      .limit(1);
+    if (!habit) return null;
+
+    await tx
+      .update(dayPlans)
+      .set({ minimumHabitId: null, updatedAt: new Date() })
+      .where(and(eq(dayPlans.userId, userId), eq(dayPlans.minimumHabitId, habitId)));
+    if (habit.templateKey) {
+      await tx
+        .insert(lifeOsSeedItems)
+        .values({ userId, itemType: 'Habit', templateKey: habit.templateKey })
+        .onConflictDoNothing();
+    }
+    const [deleted] = await tx
+      .delete(habits)
+      .where(and(eq(habits.id, habitId), eq(habits.userId, userId)))
+      .returning({ id: habits.id });
+    return deleted ?? null;
+  });
+}
 
 /**
  * Reorder habits by updating sort_order.

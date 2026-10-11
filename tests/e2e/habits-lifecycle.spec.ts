@@ -63,4 +63,11 @@ test('habit editing, ordering, archive, and restore preserve completion history'
   await expect(page.getByText('Archived habits (1)')).toHaveCount(0);
   await page.goto('/dashboard?month=2026-10');
   await expect(page.getByRole('row', { name: new RegExp(renamed) })).toContainText('1 / 1');
+
+  await page.goto('/habits');
+  await page.getByRole('button', { name: `Actions for ${renamed}` }).click();
+  await page.getByRole('menuitem', { name: 'Delete habit' }).click();
+  await expect(page.getByText(renamed)).toHaveCount(0);
+  await page.goto('/dashboard?month=2026-10');
+  await expect(page.getByRole('row', { name: new RegExp(renamed) })).toHaveCount(0);
 });

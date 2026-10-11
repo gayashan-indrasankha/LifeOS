@@ -12,6 +12,7 @@ import {
   updateHabit,
   archiveHabit,
   unarchiveHabit,
+  deleteHabit,
   reorderHabits,
   getHabitByIdAndUser,
 } from '@/lib/dal/habits';
@@ -154,6 +155,23 @@ export async function unarchiveHabitAction(habitId: string): Promise<HabitAction
 
   revalidatePath('/habits');
   revalidatePath('/dashboard');
+  return { success: true };
+}
+
+export async function deleteHabitAction(habitId: string): Promise<HabitActionState> {
+  let userId: string;
+  try {
+    userId = await requireAuth();
+  } catch {
+    return { error: 'Unauthorized' };
+  }
+  if (!z.uuid().safeParse(habitId).success) return { error: 'Invalid habit.' };
+
+  const deleted = await deleteHabit(habitId, userId);
+  if (!deleted) return { error: 'Habit not found.' };
+
+  for (const path of ['/habits', '/dashboard', '/today', '/review', '/settings/life-os'])
+    revalidatePath(path);
   return { success: true };
 }
 
