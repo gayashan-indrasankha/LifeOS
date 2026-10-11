@@ -246,26 +246,6 @@ export function LifeOsSetup() {
               You can use the plan now. Add real subjects, deadlines, and quantities when you know
               them.
             </p>
-            <nav aria-label="Open your LifeOS" className="flex flex-wrap gap-3">
-              {(
-                [
-                  ['Dashboard', '/dashboard'],
-                  ['Today', '/today'],
-                  ['Week', '/week'],
-                  ['Goals', '/goals'],
-                  ['Habits', '/habits'],
-                  ['Insights', '/review'],
-                ] as const
-              ).map(([label, href]) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className="font-semibold text-primary underline underline-offset-2"
-                >
-                  {label}
-                </Link>
-              ))}
-            </nav>
           </div>
         )}
       </form>
