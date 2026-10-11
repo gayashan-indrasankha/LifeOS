@@ -43,7 +43,7 @@ Visit `/register` to create an account or `/login` to return. Successful authent
 - `/review`: compare fixed-habit adherence, finished tasks, completed blocks, and actual measurements; save a private weekly reflection.
 - `/dashboard`: the historical month tracker. Flexible `weekly:N` habits display complete-week quota attainment and monthly raw checks, outside fixed-day percentages. See [SCHEDULING.md](SCHEDULING.md).
 - `/settings/life-os`: choose personal setup sections, inspect a read-only record and schedule preview, then explicitly install missing items. Existing customizations, archived items, and previously removed seeded items are preserved. Nothing is seeded at registration. See [LifeOS setup](docs/LIFE_OS_SETUP.md).
-- `/settings`: set timezone, week start, and theme; enable or pause an optional meal checklist and edit up to six meal templates; download an explicit versioned JSON backup. The backup includes private notes and reviews and excludes auth credentials. There is no import/restore flow.
+- `/settings`: set timezone, week start, and theme; enable or pause an optional meal checklist and edit up to six meal templates; download a versioned JSON backup or restore one on another installation. Import replaces the signed-in account's productivity data in one transaction and accepts version 1 or 2 backups. The backup includes private notes, reviews, and LifeOS setup history; it excludes account credentials and profile details. Export the destination's data first if you need to keep it.
 
 The web PostgreSQL and desktop PGlite databases remain separate. No automatic synchronization is provided.
 

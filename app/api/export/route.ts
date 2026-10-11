@@ -1,143 +1,33 @@
 import { eq } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/session';
+import { backupTables } from '@/lib/backup/format';
 import { db } from '@/lib/db';
-import {
-  applicationStageHistory,
-  dayPlans,
-  dailyNotes,
-  englishPractices,
-  goals,
-  grammarMistakes,
-  habitEntries,
-  habitScheduleRevisions,
-  habits,
-  mealLogs,
-  mealTemplates,
-  internshipApplications,
-  interviewPractices,
-  interviewTopics,
-  metricEntries,
-  milestoneCriteria,
-  milestoneReviewHistory,
-  milestoneReviews,
-  projects,
-  subjectAssessments,
-  subjectTopics,
-  subjects,
-  tasks,
-  timeBlockExceptions,
-  timeBlockRevisions,
-  timeBlocks,
-  timeOffDays,
-  topicPractices,
-  userSettings,
-  weeklyReviews,
-} from '@/lib/db/schema';
+import { habits } from '@/lib/db/schema';
 
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  const [
-    habitRows,
-    habitRevisionRows,
-    entryRows,
-    mealTemplateRows,
-    mealLogRows,
-    noteRows,
-    settingRows,
-    goalRows,
-    projectRows,
-    taskRows,
-    blockRows,
-    exceptionRows,
-    revisionRows,
-    timeOffRows,
-    planRows,
-    reviewRows,
-    metricRows,
-    subjectRows,
-    assessmentRows,
-    topicRows,
-    topicPracticeRows,
-    criterionRows,
-    milestoneReviewRows,
-    milestoneReviewHistoryRows,
-    interviewTopicRows,
-    interviewPracticeRows,
-    englishPracticeRows,
-    grammarRows,
-    applicationRows,
-    stageRows,
-  ] = await Promise.all([
-    db.select().from(habits).where(eq(habits.userId, user.id)),
-    db.select().from(habitScheduleRevisions).where(eq(habitScheduleRevisions.userId, user.id)),
-    db.select().from(habitEntries).where(eq(habitEntries.userId, user.id)),
-    db.select().from(mealTemplates).where(eq(mealTemplates.userId, user.id)),
-    db.select().from(mealLogs).where(eq(mealLogs.userId, user.id)),
-    db.select().from(dailyNotes).where(eq(dailyNotes.userId, user.id)),
-    db.select().from(userSettings).where(eq(userSettings.userId, user.id)),
-    db.select().from(goals).where(eq(goals.userId, user.id)),
-    db.select().from(projects).where(eq(projects.userId, user.id)),
-    db.select().from(tasks).where(eq(tasks.userId, user.id)),
-    db.select().from(timeBlocks).where(eq(timeBlocks.userId, user.id)),
-    db.select().from(timeBlockExceptions).where(eq(timeBlockExceptions.userId, user.id)),
-    db.select().from(timeBlockRevisions).where(eq(timeBlockRevisions.userId, user.id)),
-    db.select().from(timeOffDays).where(eq(timeOffDays.userId, user.id)),
-    db.select().from(dayPlans).where(eq(dayPlans.userId, user.id)),
-    db.select().from(weeklyReviews).where(eq(weeklyReviews.userId, user.id)),
-    db.select().from(metricEntries).where(eq(metricEntries.userId, user.id)),
-    db.select().from(subjects).where(eq(subjects.userId, user.id)),
-    db.select().from(subjectAssessments).where(eq(subjectAssessments.userId, user.id)),
-    db.select().from(subjectTopics).where(eq(subjectTopics.userId, user.id)),
-    db.select().from(topicPractices).where(eq(topicPractices.userId, user.id)),
-    db.select().from(milestoneCriteria).where(eq(milestoneCriteria.userId, user.id)),
-    db.select().from(milestoneReviews).where(eq(milestoneReviews.userId, user.id)),
-    db.select().from(milestoneReviewHistory).where(eq(milestoneReviewHistory.userId, user.id)),
-    db.select().from(interviewTopics).where(eq(interviewTopics.userId, user.id)),
-    db.select().from(interviewPractices).where(eq(interviewPractices.userId, user.id)),
-    db.select().from(englishPractices).where(eq(englishPractices.userId, user.id)),
-    db.select().from(grammarMistakes).where(eq(grammarMistakes.userId, user.id)),
-    db.select().from(internshipApplications).where(eq(internshipApplications.userId, user.id)),
-    db.select().from(applicationStageHistory).where(eq(applicationStageHistory.userId, user.id)),
-  ]);
-  const withoutOwner = <T extends { userId: string }>(rows: T[]) =>
-    rows.map(({ userId: _userId, ...record }) => {
-      void _userId;
-      return record;
-    });
+
+  const sections = await Promise.all(
+    backupTables.map(async ([name, table]) => {
+      const rows = await db
+        .select()
+        .from(table as typeof habits)
+        .where(eq((table as typeof habits).userId, user.id));
+      return [
+        name,
+        rows.map(({ userId: _userId, ...record }) => {
+          void _userId;
+          return record;
+        }),
+      ] as const;
+    }),
+  );
+
   const data = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     exportedAt: new Date().toISOString(),
-    habits: withoutOwner(habitRows),
-    habitScheduleRevisions: withoutOwner(habitRevisionRows),
-    habitEntries: withoutOwner(entryRows),
-    mealTemplates: withoutOwner(mealTemplateRows),
-    mealLogs: withoutOwner(mealLogRows),
-    dailyNotes: withoutOwner(noteRows),
-    userSettings: withoutOwner(settingRows),
-    goals: withoutOwner(goalRows),
-    projects: withoutOwner(projectRows),
-    tasks: withoutOwner(taskRows),
-    timeBlocks: withoutOwner(blockRows),
-    timeBlockExceptions: withoutOwner(exceptionRows),
-    timeBlockRevisions: withoutOwner(revisionRows),
-    timeOffDays: withoutOwner(timeOffRows),
-    dayPlans: withoutOwner(planRows),
-    weeklyReviews: withoutOwner(reviewRows),
-    metricEntries: withoutOwner(metricRows),
-    subjects: withoutOwner(subjectRows),
-    subjectAssessments: withoutOwner(assessmentRows),
-    subjectTopics: withoutOwner(topicRows),
-    topicPractices: withoutOwner(topicPracticeRows),
-    milestoneCriteria: withoutOwner(criterionRows),
-    milestoneReviews: withoutOwner(milestoneReviewRows),
-    milestoneReviewHistory: withoutOwner(milestoneReviewHistoryRows),
-    interviewTopics: withoutOwner(interviewTopicRows),
-    interviewPractices: withoutOwner(interviewPracticeRows),
-    englishPractices: withoutOwner(englishPracticeRows),
-    grammarMistakes: withoutOwner(grammarRows),
-    internshipApplications: withoutOwner(applicationRows),
-    applicationStageHistory: withoutOwner(stageRows),
+    ...Object.fromEntries(sections),
   };
   return new Response(JSON.stringify(data, null, 2), {
     headers: {
