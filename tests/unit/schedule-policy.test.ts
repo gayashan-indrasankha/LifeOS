@@ -231,5 +231,17 @@ describe('schedule policy', () => {
     };
     expect(isFixedOccurrence(legacy, '2026-01-02', 5)).toBe(false);
     expect(isFixedOccurrence(legacy, '2026-10-09', 5)).toBe(true);
+    const days = [
+      { date: '2026-10-08', day: 8, weekday: 'Thu', dayOfWeek: 4 },
+      { date: '2026-10-09', day: 9, weekday: 'Fri', dayOfWeek: 5 },
+    ];
+    expect(scheduleStats(legacy, days, new Set(), '2026-10-09')).toEqual({
+      total: 1,
+      completed: 0,
+    });
+    expect(scheduleStats(legacy, days, new Set(['2026-10-08']), '2026-10-09')).toEqual({
+      total: 2,
+      completed: 1,
+    });
   });
 });

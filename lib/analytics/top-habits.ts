@@ -1,5 +1,5 @@
 import type { SelectHabit, SelectHabitEntry, TopHabit } from '@/types';
-import { isFixedOccurrence } from './habit-month-progress';
+import { scheduleStats } from './habit-month-progress';
 import { format } from 'date-fns';
 
 /**
@@ -16,22 +16,28 @@ export function calculateTopHabits(
   if (habits.length === 0) return [];
 
   const todayStr = format(today, 'yyyy-MM-dd');
-  const entrySet = new Set(
-    entries.filter((entry) => entry.completed).map((entry) => `${entry.habitId}:${entry.date}`),
-  );
+  const completedByHabit = new Map<string, Set<string>>();
+  for (const entry of entries) {
+    if (!entry.completed) continue;
+    const dates = completedByHabit.get(entry.habitId) ?? new Set<string>();
+    dates.add(entry.date);
+    completedByHabit.set(entry.habitId, dates);
+  }
+  const days = daysInMonth.map((day) => ({
+    date: format(day, 'yyyy-MM-dd'),
+    day: day.getDate(),
+    weekday: '',
+    dayOfWeek: day.getDay(),
+  }));
 
   return habits
     .map((habit) => {
-      let total = 0;
-      let completed = 0;
-
-      for (const day of daysInMonth) {
-        const dayStr = format(day, 'yyyy-MM-dd');
-        if (dayStr > todayStr) continue;
-        if (!isFixedOccurrence(habit, dayStr, day.getDay())) continue;
-        total++;
-        if (entrySet.has(`${habit.id}:${dayStr}`)) completed++;
-      }
+      const { total, completed } = scheduleStats(
+        habit,
+        days,
+        completedByHabit.get(habit.id) ?? new Set<string>(),
+        todayStr,
+      );
 
       return {
         habit,
