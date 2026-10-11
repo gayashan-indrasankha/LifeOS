@@ -64,13 +64,13 @@ export function AppHeader({ user, settings }: AppHeaderProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="min-h-10 min-w-0 gap-2"
+              className="min-h-11 min-w-11 gap-2 lg:min-h-10 lg:min-w-0"
               aria-label={`Account menu for ${user.name ?? user.email}`}
             >
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-semibold uppercase text-primary-foreground">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold uppercase text-primary-foreground lg:h-7 lg:w-7">
                 {(user.name ?? user.email)[0]}
               </div>
-              <span className="hidden max-w-40 truncate text-sm md:block">
+              <span className="hidden max-w-40 truncate text-sm lg:block">
                 {user.name ?? 'Account'}
               </span>
             </Button>

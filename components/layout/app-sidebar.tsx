@@ -36,16 +36,23 @@ export function MobileNav() {
 
   useEffect(() => {
     if (!window.matchMedia('(max-width: 1023px)').matches) return;
-    navRef.current
-      ?.querySelector('[aria-current="page"]')
-      ?.scrollIntoView({ block: 'nearest', inline: 'center' });
+    const nav = navRef.current;
+    const active = nav?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!nav || !active) return;
+    const navRect = nav.getBoundingClientRect();
+    const activeRect = active.getBoundingClientRect();
+    if (activeRect.left >= navRect.left && activeRect.right <= navRect.right) return;
+    nav.scrollTo({
+      left:
+        nav.scrollLeft + activeRect.left - navRect.left - (navRect.width - activeRect.width) / 2,
+    });
   }, [pathname]);
 
   return (
     <nav
       ref={navRef}
       aria-label="Mobile navigation"
-      className="sticky top-16 z-30 flex gap-1 overflow-x-auto border-b bg-card p-2 lg:hidden"
+      className="mobile-nav-scroll sticky top-16 z-30 flex w-full min-w-0 max-w-full gap-1 overflow-x-auto overscroll-x-contain whitespace-nowrap border-b bg-card p-2 lg:hidden"
     >
       {navigation.map((item) => (
         <Link
