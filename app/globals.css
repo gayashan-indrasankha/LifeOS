@@ -148,6 +148,226 @@
   outline-offset: -2px;
 }
 
+.android-mobile-copy {
+  display: none;
+}
+
+@media (max-width: 639px) {
+  .lifeos-android .android-progress-stat-label {
+    display: block;
+    line-height: 1.15;
+  }
+
+  .lifeos-android .android-standard-copy {
+    display: none;
+  }
+
+  .lifeos-android .android-mobile-copy {
+    display: inline;
+  }
+
+  .lifeos-android :is(.android-learn-section, .android-learn-grid, .android-learn-card) {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .lifeos-android .android-learn-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lifeos-android .android-evidence-scroll {
+    width: 100%;
+    max-width: 100%;
+    overscroll-behavior-x: contain;
+  }
+
+  .lifeos-android .android-copy-intro {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: start;
+    column-gap: 12px;
+    row-gap: 10px;
+  }
+
+  .lifeos-android .android-copy-intro > div {
+    display: contents;
+  }
+
+  .lifeos-android .android-copy-intro > div > :first-child {
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  .lifeos-android .android-copy-intro > div > p {
+    grid-column: 1 / -1;
+    margin-top: 0;
+  }
+
+  .lifeos-android .android-nutrition-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .lifeos-android .android-nutrition-header > :is(.android-copy-intro, form),
+  .lifeos-android .android-nutrition-header > form button {
+    width: 100%;
+  }
+
+  .lifeos-android .android-nutrition-header > form button {
+    min-height: 44px;
+  }
+
+  .lifeos-android .android-meal-heading {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    align-items: start;
+    column-gap: 12px;
+    row-gap: 8px;
+  }
+
+  .lifeos-android .android-meal-heading > div {
+    display: contents;
+  }
+
+  .lifeos-android .android-meal-heading > div > h3 {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .lifeos-android .android-meal-heading > span:last-child {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
+  }
+
+  .lifeos-android .android-meal-heading > div > p {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    margin-top: 0;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .lifeos-android .android-meal-choices {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lifeos-android .android-meal-choices > button {
+    min-width: 0;
+    min-height: 44px;
+  }
+
+  .lifeos-android .android-meal-choices > button:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .lifeos-android .android-primary-action,
+  .lifeos-android .android-secondary-action {
+    display: inline-flex;
+    width: 100%;
+    min-height: 48px;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    text-align: center;
+    text-decoration: none;
+  }
+
+  .lifeos-android .android-primary-action {
+    border: 1px solid var(--primary);
+    background: var(--primary);
+    color: var(--primary-foreground);
+    box-shadow: 0 3px 8px color-mix(in oklab, var(--primary) 18%, transparent);
+  }
+
+  .lifeos-android .android-secondary-action {
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--primary);
+  }
+
+  .lifeos-android :is(.android-primary-action, .android-secondary-action):hover {
+    text-decoration: none;
+  }
+
+  .lifeos-android .android-review-heading {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .lifeos-android .android-week-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lifeos-android .android-week-nav > a {
+    min-height: 48px;
+    min-width: 0;
+    padding: 10px 8px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .lifeos-android .android-week-nav > a:nth-child(2) {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+}
+
+@media (max-width: 639px) {
+  .habit-grid-scroll {
+    --habit-column-width: clamp(6.25rem, 32vw, 9rem);
+    --goal-column-width: clamp(3.125rem, 13vw, 3.5rem);
+    --progress-column-width: clamp(5rem, 24vw, 6rem);
+  }
+
+  .habit-grid-scroll :is([data-fixed-column='habit'], .habit-grid-habit) {
+    width: var(--habit-column-width);
+    min-width: var(--habit-column-width);
+    max-width: var(--habit-column-width);
+  }
+
+  .habit-grid-scroll .habit-grid-goal {
+    position: sticky;
+    left: var(--habit-column-width);
+    width: var(--goal-column-width);
+    min-width: var(--goal-column-width);
+    max-width: var(--goal-column-width);
+    background: var(--card);
+    z-index: 10;
+  }
+
+  .habit-grid-scroll .habit-grid-progress {
+    position: sticky;
+    left: calc(var(--habit-column-width) + var(--goal-column-width));
+    width: var(--progress-column-width);
+    min-width: var(--progress-column-width);
+    max-width: var(--progress-column-width);
+    background: var(--card);
+    z-index: 10;
+  }
+
+  .habit-grid-scroll thead :is(.habit-grid-goal, .habit-grid-progress) {
+    background: var(--primary);
+    z-index: 20;
+  }
+
+  .habit-grid-scroll .habit-grid-day {
+    width: var(--habit-day-width, 3rem);
+    min-width: var(--habit-day-width, 3rem);
+    max-width: var(--habit-day-width, 3rem);
+  }
+}
+
+.mobile-nav-scroll {
+  scrollbar-width: none;
+}
+.mobile-nav-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 @keyframes habit-tooltip-appear {
   from {
     opacity: 0;

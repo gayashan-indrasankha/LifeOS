@@ -1,4 +1,5 @@
 import { requireUser } from '@/lib/auth/session';
+import { headers } from 'next/headers';
 import { getUserSettings } from '@/lib/dal/user-settings';
 import { AppSidebar, MobileNav } from '@/components/layout/app-sidebar';
 import { AppHeader } from '@/components/layout/app-header';
@@ -6,9 +7,10 @@ import { AppHeader } from '@/components/layout/app-header';
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
   const settings = await getUserSettings(user.id);
+  const isAndroidApp = (await headers()).get('user-agent')?.includes('LifeOSAndroid/1');
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className={`${isAndroidApp ? 'lifeos-android ' : ''}flex min-h-screen bg-background`}>
       <AppSidebar user={user} />
       <div className="flex min-w-0 flex-1 flex-col lg:pl-64">
         <AppHeader user={user} settings={settings} />
