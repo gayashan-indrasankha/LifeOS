@@ -19,10 +19,10 @@ export function HomeWeightCard({
     <section
       id="home-weight"
       aria-labelledby="home-weight-heading"
-      className="rounded-2xl border bg-card p-5 shadow-sm sm:p-6"
+      className="min-w-0 rounded-2xl border bg-card p-4 shadow-sm sm:p-6"
     >
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex items-start gap-3">
+      <div className="flex flex-col items-start gap-4 sm:flex-row sm:flex-wrap sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <Scale aria-hidden="true" className="size-5" />
           </span>
@@ -38,14 +38,14 @@ export function HomeWeightCard({
         </div>
         <Link
           href="/today#today-weight"
-          className="inline-flex min-h-10 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90"
+          className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90 sm:min-h-10 sm:w-auto"
         >
           Record today’s weight
         </Link>
       </div>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(200px,0.7fr)_minmax(0,2fr)] lg:items-center">
-        <div className="rounded-xl bg-muted/40 p-4">
+      <div className="mt-5 grid min-w-0 gap-4 sm:gap-5 lg:grid-cols-[minmax(200px,0.7fr)_minmax(0,2fr)] lg:items-center">
+        <div className="min-w-0 rounded-xl bg-muted/40 p-4">
           <p className="text-sm text-muted-foreground">Latest measurement</p>
           <p className="mt-1 text-3xl font-bold tabular-nums">
             {latest == null ? '—' : `${latest.value.toFixed(1)} kg`}

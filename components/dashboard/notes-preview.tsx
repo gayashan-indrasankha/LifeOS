@@ -21,7 +21,7 @@ export function NotesPreview({ content }: { content: string }) {
         )}
         <Link
           href={content.trim() ? '/notes' : '/today?finish=1#finish-your-day'}
-          className="inline-flex items-center gap-1 text-xs font-bold text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="inline-flex min-h-11 items-center gap-1 text-sm font-bold text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-0 sm:text-xs"
         >
           {content.trim() ? 'Read journal' : 'Write today’s entry'}{' '}
           <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
