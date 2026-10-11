@@ -86,6 +86,7 @@ async function launch() {
   });
   await waitForServer(origin, server);
   const window = new BrowserWindow({
+    icon: path.join(__dirname, 'icon.ico'),
     width: 1380,
     height: 900,
     minWidth: 370,

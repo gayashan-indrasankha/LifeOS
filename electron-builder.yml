@@ -9,7 +9,7 @@ files:
   - '**/*'
   - '!**/*.map'
 win:
-  icon: app/icon.svg
+  icon: desktop/icon.ico
   target:
     - nsis
 nsis:
