@@ -30,7 +30,7 @@ export default async function SettingsPage() {
         aria-labelledby="data-management-heading"
         className="overflow-hidden rounded-2xl border bg-card shadow-sm"
       >
-        <div className="flex items-start gap-3 border-b px-5 py-5 sm:px-6">
+        <div className="android-copy-intro flex items-start gap-3 border-b px-5 py-5 sm:px-6">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <DatabaseBackup aria-hidden="true" className="h-5 w-5" />
           </span>
@@ -82,7 +82,12 @@ export default async function SettingsPage() {
         </div>
         <p className="flex items-start gap-2 border-t bg-muted/20 px-5 py-3 text-xs leading-relaxed text-muted-foreground sm:px-6">
           <LockKeyhole aria-hidden="true" className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          Backups include private notes and reviews. Keep the downloaded file somewhere you trust.
+          <span className="android-standard-copy">
+            Backups include private notes and reviews. Keep the downloaded file somewhere you trust.
+          </span>
+          <span className="android-mobile-copy">
+            Your backup contains private notes and reviews, so keep it somewhere you trust.
+          </span>
         </p>
       </section>
     </div>

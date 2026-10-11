@@ -138,9 +138,16 @@ export function BackupImport() {
             <div>
               <p className="font-semibold">This will replace your current LifeOS data</p>
               <p className="mt-1 leading-relaxed opacity-85">
-                Habits, check-ins, meals, plans, settings, notes and reviews will be replaced. Your
-                sign-in stays the same. Download a backup of this device first if you need to keep
-                its data.
+                <span className="android-standard-copy">
+                  Habits, check-ins, meals, plans, settings, notes and reviews will be replaced. Your
+                  sign-in stays the same. Download a backup of this device first if you need to keep
+                  its data.
+                </span>
+                <span className="android-mobile-copy">
+                  Restoring replaces this device’s habits, check-ins, meals, plans, settings, notes
+                  and reviews, while keeping your sign-in. Download a backup first if you need to
+                  keep this device’s data.
+                </span>
               </p>
             </div>
           </div>

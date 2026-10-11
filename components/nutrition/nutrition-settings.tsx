@@ -101,8 +101,8 @@ export function NutritionSettings({ enabled, meals }: { enabled: boolean; meals:
       aria-label="Optional meal checklist"
       className="overflow-hidden rounded-2xl border bg-card shadow-sm"
     >
-      <div className="flex flex-wrap items-start justify-between gap-4 p-5 sm:p-6">
-        <div className="flex min-w-0 flex-1 items-start gap-3">
+      <div className="android-nutrition-header flex flex-wrap items-start justify-between gap-4 p-5 sm:p-6">
+        <div className="android-copy-intro flex min-w-0 flex-1 items-start gap-3">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <UtensilsCrossed aria-hidden="true" className="h-5 w-5" />
           </span>
@@ -116,9 +116,15 @@ export function NutritionSettings({ enabled, meals }: { enabled: boolean; meals:
               </span>
             </div>
             <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-              Plan a few meals here. On Today, mark whether you ate each meal as planned or ate
-              something else. You can leave that question unanswered and enter actual amounts
-              separately on Today. Planned nutrition values are references, not amounts you ate.
+              <span className="android-standard-copy">
+                Plan a few meals here. On Today, mark whether you ate each meal as planned or ate
+                something else. You can leave that question unanswered and enter actual amounts
+                separately on Today. Planned nutrition values are references, not amounts you ate.
+              </span>
+              <span className="android-mobile-copy">
+                Plan meals here, then mark each one as planned, changed, or missed on Today. Log
+                actual amounts separately when you have them; planned values are only a guide.
+              </span>
             </p>
           </div>
         </div>
