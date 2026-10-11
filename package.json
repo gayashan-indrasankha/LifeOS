@@ -21,7 +21,7 @@
     "db:push": "drizzle-kit push",
     "desktop:prepare": "node scripts/prepare-desktop.mjs",
     "desktop:smoke": "node scripts/smoke-desktop-server.cjs",
-    "desktop:package": "npm run build && npm run desktop:prepare && electron-builder --win portable"
+    "desktop:package": "npm run build && npm run desktop:prepare && electron-builder --win nsis"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",

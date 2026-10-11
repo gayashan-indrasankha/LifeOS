@@ -1,4 +1,4 @@
-name: Windows desktop package
+name: Windows desktop installer
 
 on:
   push:
@@ -15,9 +15,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  portable:
+  installer:
     runs-on: windows-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     env:
       DATABASE_URL: postgresql://127.0.0.1:1/ci-build-placeholder
       BETTER_AUTH_SECRET: ci-only-build-secret-never-used-outside-tests
@@ -30,6 +30,9 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
       - name: Fresh embedded database
         run: node scripts/check-embedded-migrations.mjs
       - name: Existing-data embedded upgrades
@@ -38,16 +41,25 @@ jobs:
         run: node tests/integration/pglite-persistence.mjs
       - name: Standalone desktop server and authenticated routes
         run: npm run build && npm run desktop:smoke
-      - name: Build Windows portable executable
+      - name: Build Windows installer
         run: npm run desktop:package
-      - name: Inspect portable bundle
+      - name: Inspect installer bundle
         shell: pwsh
         run: |
-          $exe = Get-ChildItem -LiteralPath dist-desktop -Filter '*.exe' -File | Select-Object -First 1
-          if (-not $exe -or $exe.Length -lt 1MB) { throw 'Portable executable missing or unexpectedly small' }
+          $version = (Get-Content -LiteralPath package.json -Raw | ConvertFrom-Json).version
+          $installerPath = Join-Path dist-desktop "LifeOS Setup $version.exe"
+          if (-not (Test-Path -LiteralPath $installerPath -PathType Leaf)) { throw "Installer missing: $installerPath" }
+          $installer = Get-Item -LiteralPath $installerPath
+          if ($installer.Length -lt 1MB) { throw 'Installer unexpectedly small' }
           if (-not (Test-Path -LiteralPath desktop-stage/lib/db/migrations/meta/_journal.json)) { throw 'Migration journal missing from staged bundle' }
           if (-not (Test-Path -LiteralPath desktop-stage/.next/standalone/server.js)) { throw 'Standalone server missing from staged bundle' }
-          Write-Output "Portable package: $($exe.Name), $($exe.Length) bytes"
+          Write-Output "Installer: $($installer.Name), $($installer.Length) bytes"
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: LifeOS-Windows-Installer
+          path: dist-desktop/LifeOS Setup *.exe
+          if-no-files-found: error
       - name: Packaged Electron UI and restart persistence
         shell: pwsh
         run: node tests/desktop/portable.mjs

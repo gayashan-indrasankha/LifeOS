@@ -4,12 +4,14 @@ import { tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { _electron as electron, expect } from '@playwright/test';
 
-if (process.platform !== 'win32')
-  throw new Error('Windows portable verification requires Windows.');
+if (process.platform !== 'win32') throw new Error('Windows desktop verification requires Windows.');
 const output = resolve('dist-desktop');
 const version = JSON.parse(await readFile(resolve('package.json'), 'utf8')).version;
-const executables = (await readdir(output)).filter((name) => /^LifeOS .*\.exe$/.test(name));
-assert.equal(executables.length, 1, 'Expected one built portable executable.');
+const installerName = `LifeOS Setup ${version}.exe`;
+assert(
+  (await readdir(output)).includes(installerName),
+  `Expected built installer ${installerName}.`,
+);
 const executablePath = process.env.HABITFLOW_DESKTOP_EXE
   ? resolve(process.env.HABITFLOW_DESKTOP_EXE)
   : join(output, 'win-unpacked', 'LifeOS.exe');

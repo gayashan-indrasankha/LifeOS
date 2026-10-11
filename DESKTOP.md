@@ -1,24 +1,35 @@
 # LifeOS for Windows
 
-`npm run desktop:package` builds a portable Windows executable in `dist-desktop/`. Double-click `LifeOS <version>.exe` to open it. No Docker, PostgreSQL installation, Node.js installation, or internet connection is required on the destination PC. The portable executable extracts its runtime when opened, so its first launch may take longer than later launches.
+LifeOS is packaged as a Windows installer. Download `LifeOS Setup <version>.exe` from the **LifeOS-Windows-Installer** artifact of a successful [Windows desktop installer](.github/workflows/desktop-check.yml) workflow run, or build it from source. The installed app runs without Docker, PostgreSQL, Node.js, or an internet connection on the destination PC.
 
-LifeOS stores its database and encrypted session secret in the current Windows user's LifeOS application data directory. If a previous HabitFlow desktop database exists, LifeOS continues using that directory so existing accounts and habits remain available. Moving the executable to another PC does **not** move that data. Back up the application data directory before replacing or moving a PC; do not copy a live database while LifeOS is running. The desktop database is separate from local Docker PostgreSQL and Neon; this package does not import existing cloud or Docker accounts and habits.
+To build it in GitHub, open **Actions → Windows desktop installer → Run workflow** and select the branch. When the run finishes, open its summary, download **LifeOS-Windows-Installer** under **Artifacts**, and extract the setup executable from the ZIP.
 
-The desktop process starts an embedded PGlite database, applies the checked-in Drizzle migrations, and starts the Next.js standalone server on a random loopback port. The app opens that server in a locked-down Electron window. It binds only to `127.0.0.1`. Other software running on the same Windows machine can technically reach loopback ports, so use the desktop build on a trusted PC and keep Windows user accounts separate.
+## Install and uninstall
+
+Run the installer and follow its setup wizard. You can install for your Windows account or for all users, choose the installation directory, and create desktop and Start Menu shortcuts. The final page can launch LifeOS. Because the installer is currently unsigned, Windows may show an unknown publisher warning.
+
+Setup grants Windows sandboxed processes read and execute access to the chosen LifeOS program folder. This prevents a startup crash on folders whose inherited permissions omit application-package access. The grant does not apply to your LifeOS data folder.
+
+Remove LifeOS through **Windows Settings → Apps → Installed apps** or its Start Menu uninstall entry. Closing the app before uninstalling or upgrading lets its embedded database shut down cleanly. Uninstalling the program does not delete your LifeOS data. Installing a newer version for the same Windows account uses that account's existing data.
+
+LifeOS keeps its database and encrypted session secret in the current Windows user's application data directory (`%APPDATA%\LifeOS`). If an older HabitFlow desktop database exists, it continues using `%APPDATA%\HabitFlow` instead. These directories are separate from the chosen program installation directory, so choosing another install location or uninstalling the program leaves the data in place. Each Windows account has its own data. Back up the application data directory before replacing or moving a PC, with LifeOS closed; moving only the installer does not move your data. The desktop database is separate from local Docker PostgreSQL and Neon, and the installer does not import their accounts or habits.
 
 ## Build from source
 
-On Windows with Node.js installed:
+On Windows with Node.js 24 and npm installed, from the repository root:
 
-1. `npm ci`
-2. `npm run typecheck && npm run lint && npm test`
-3. `npm run desktop:package`
-4. Open the generated file in `dist-desktop/`.
+```powershell
+npm.cmd ci
+npm.cmd run typecheck
+npm.cmd run lint
+npm.cmd test
+npm.cmd run desktop:package
+```
 
-The build creates a Next.js standalone server and packages Electron, PGlite, migrations, and static assets into a single portable `.exe`. The generated output is ignored by Git. The executable is currently unsigned; Windows may show a publisher warning when opening an unsigned binary. A release distributed to others should be code signed.
+The versioned installer is written to `dist-desktop/LifeOS Setup <version>.exe` (for example, `LifeOS Setup 0.1.0.exe`). The build also creates `dist-desktop/win-unpacked/` for package verification. Generated output is ignored by Git. A release distributed to others should be code signed.
 
-The web deployment and its Neon database remain separately configured in [DEPLOYMENT.md](DEPLOYMENT.md).
+The desktop process starts an embedded PGlite database, applies the checked-in Drizzle migrations, and starts the Next.js standalone server on a random `127.0.0.1` port. It opens that server in an Electron window. Other software running under the same Windows machine can technically reach loopback ports, so keep Windows user accounts separate on shared PCs. The web deployment and its Neon database remain separately configured in [DEPLOYMENT.md](DEPLOYMENT.md).
 
-For a noninteractive desktop runtime check after `npm run build`, run `npm run desktop:smoke`. It starts a fresh temporary PGlite database, applies all checked-in migrations, registers a test account, and requests Today, Week, Goals, Review, the old Dashboard, and JSON export through the standalone server. It does not open an Electron window or touch the usual desktop application data directory.
+## Verify a build
 
-Release verification distinguishes this server smoke from opening the packaged `.exe`. The Windows CI job builds and inspects the portable bundle, then runs `node tests/desktop/portable.mjs` against its packaged Electron executable to verify a real window, authenticated writes, and persistence after a clean restart at either desktop or mobile window widths. The NSIS launcher itself requires a separate direct launch check because Playwright attaches to the child Electron process. See [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md) for observed results and remaining desktop checks.
+After `npm run build`, `npm run desktop:smoke` checks the standalone server with a temporary PGlite database and authenticated routes, without opening a window or touching normal application data. The Windows workflow builds and inspects the installer, then runs `node tests/desktop/portable.mjs` against the unpacked Electron app with an isolated temporary data directory. That test checks a real window, authenticated writes, and persistence after a clean restart. It does not run the installer or change the user's installed application. Installer wizard choices and the Windows uninstall entry still need a manual release check on a test machine; see [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md).
