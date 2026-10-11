@@ -52,9 +52,9 @@ export function AnalyticsPanel({
   return (
     <section
       aria-label="Habit analytics"
-      className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 xl:grid-cols-[minmax(190px,1fr)_minmax(0,2.25fr)_minmax(190px,1fr)]"
+      className="grid min-w-0 grid-cols-1 items-start gap-4 md:grid-cols-2 xl:grid-cols-[minmax(190px,1fr)_minmax(0,2.25fr)_minmax(190px,1fr)]"
     >
-      <div className="grid gap-4">
+      <div className="grid min-w-0 gap-4">
         <ProgressSummary
           stats={stats}
           currentStreak={currentStreak}
@@ -64,11 +64,11 @@ export function AnalyticsPanel({
         />
         <TopHabitsList topHabits={topHabits} />
       </div>
-      <div className="grid gap-4">
+      <div className="grid min-w-0 gap-4">
         <DailyLineChart data={dailyProgress} />
         <WeeklyBarChart data={weeklySummary} />
       </div>
-      <div className="grid gap-4 md:col-span-2 xl:col-span-1">
+      <div className="grid min-w-0 gap-4 md:col-span-2 xl:col-span-1">
         <CompletionDonut stats={stats} />
         <NotesPreview content={note} />
       </div>

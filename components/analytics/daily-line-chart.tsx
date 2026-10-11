@@ -28,7 +28,7 @@ export function DailyLineChart({ data }: DailyLineChartProps) {
 
   if (chartData.length === 0) {
     return (
-      <Card className="analytics-card">
+      <Card className="analytics-card min-w-0">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium">{CHART_TITLE}</CardTitle>
         </CardHeader>
@@ -40,14 +40,14 @@ export function DailyLineChart({ data }: DailyLineChartProps) {
   }
 
   return (
-    <Card className="analytics-card">
+    <Card className="analytics-card min-w-0">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium">{CHART_TITLE}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-48">
+        <div className="h-52 w-full min-w-0 sm:h-48">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+            <LineChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis
                 dataKey="day"
@@ -61,6 +61,7 @@ export function DailyLineChart({ data }: DailyLineChartProps) {
                 tickLine={false}
                 axisLine={false}
                 domain={[0, 100]}
+                width={38}
                 tickFormatter={(v) => `${v}%`}
               />
               <Tooltip

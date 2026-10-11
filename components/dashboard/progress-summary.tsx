@@ -48,20 +48,24 @@ export function ProgressSummary({
           <div>
             <Flame className="mb-1 h-4 w-4 text-primary" aria-hidden="true" />
             <strong className="block text-sm">{currentStreak}</strong>
-            <span className="text-[10px] text-muted-foreground">Current activity streak</span>
+            <span className="android-progress-stat-label text-xs text-muted-foreground sm:text-[10px]">
+              Current activity streak
+            </span>
           </div>
           <div>
             <Trophy className="mb-1 h-4 w-4 text-primary" aria-hidden="true" />
             <strong className="block text-sm">{bestStreak}</strong>
-            <span className="text-[10px] text-muted-foreground">Best activity streak</span>
+            <span className="android-progress-stat-label text-xs text-muted-foreground sm:text-[10px]">
+              Best activity streak
+            </span>
           </div>
           <div>
             <Activity className="mb-1 h-4 w-4 text-primary" aria-hidden="true" />
             <strong className="block text-sm">{habitCount}</strong>
-            <span className="text-[10px] text-muted-foreground">Active habits</span>
+            <span className="text-xs text-muted-foreground sm:text-[10px]">Active habits</span>
           </div>
         </div>
-        <p className="mt-3 text-left text-[10px] text-muted-foreground">
+        <p className="mt-3 text-left text-xs text-muted-foreground sm:text-[10px]">
           Any eligible completion on consecutive days through {streakCutoff}. Flexible weekly quotas
           are shown per week.
         </p>

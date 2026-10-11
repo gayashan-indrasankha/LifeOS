@@ -19,7 +19,7 @@ export function CompletionDonut({ stats }: CompletionDonutProps) {
 
   if (stats.total === 0) {
     return (
-      <Card className="analytics-card">
+      <Card className="analytics-card min-w-0">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium">Scheduled habit check-ins</CardTitle>
         </CardHeader>
@@ -31,12 +31,12 @@ export function CompletionDonut({ stats }: CompletionDonutProps) {
   }
 
   return (
-    <Card className="analytics-card">
+    <Card className="analytics-card min-w-0">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium">Scheduled habit check-ins</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="relative h-48">
+        <div className="relative h-48 w-full min-w-0">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie

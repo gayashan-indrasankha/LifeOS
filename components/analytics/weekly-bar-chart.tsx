@@ -12,7 +12,7 @@ export function WeeklyBarChart({ data }: WeeklyBarChartProps) {
   const hasScheduledCheckIns = data.some((week) => week.total > 0);
 
   return (
-    <Card className="analytics-card">
+    <Card className="analytics-card min-w-0">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium">
           Scheduled habit check-ins · last 8 weeks
@@ -27,24 +27,25 @@ export function WeeklyBarChart({ data }: WeeklyBarChartProps) {
           </div>
         ) : (
           <div
-            className="themed-scrollbar overflow-x-auto"
+            className="themed-scrollbar w-full min-w-0 overflow-x-auto"
             tabIndex={0}
             aria-label="Scroll weekly habit chart horizontally"
           >
             <div
-              className="h-44 min-w-[560px]"
+              className="h-52 w-full min-w-0 sm:h-44 sm:min-w-[560px]"
               role="img"
               aria-label="Scheduled habit check-in rate for the last eight weeks"
             >
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={data}
-                  margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
+                  margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
                   barCategoryGap="12%"
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                   <XAxis
                     dataKey="weekLabel"
+                    interval="preserveStartEnd"
                     tick={{ fontSize: 11 }}
                     tickLine={false}
                     axisLine={false}
@@ -54,6 +55,7 @@ export function WeeklyBarChart({ data }: WeeklyBarChartProps) {
                     tickLine={false}
                     axisLine={false}
                     domain={[0, 100]}
+                    width={38}
                     tickFormatter={(value) => `${value}%`}
                   />
                   <Tooltip

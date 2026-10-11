@@ -24,8 +24,10 @@ export function TopHabitsList({ topHabits }: TopHabitsListProps) {
                   {index + 1}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="mb-1 flex items-center justify-between">
-                    <span className="truncate text-xs font-medium">{item.habit.name}</span>
+                  <div className="mb-1 flex items-start justify-between gap-2">
+                    <span className="line-clamp-2 min-w-0 text-sm font-medium sm:truncate sm:text-xs">
+                      {item.habit.name}
+                    </span>
                     <span className="ml-2 shrink-0 text-xs tabular-nums text-muted-foreground">
                       {item.rate}%
                     </span>
