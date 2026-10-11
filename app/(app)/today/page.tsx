@@ -224,7 +224,7 @@ export default async function TodayPage({
             {selected.length === 0 && (
               <a
                 href="#today-priorities"
-                className="font-semibold text-primary underline underline-offset-2"
+                className="android-primary-action font-semibold text-primary underline underline-offset-2"
               >
                 Choose a task
               </a>
@@ -493,7 +493,7 @@ export default async function TodayPage({
                 ) : (
                   <Link
                     href="/goals"
-                    className="mt-4 inline-flex min-h-10 items-center text-sm font-medium text-primary underline"
+                    className="android-secondary-action mt-4 inline-flex min-h-10 items-center text-sm font-medium text-primary underline"
                   >
                     Open tasks
                   </Link>

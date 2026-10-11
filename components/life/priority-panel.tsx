@@ -221,7 +221,7 @@ export function PriorityPanel({
       ) : (
         <Link
           href="/goals"
-          className="mt-4 inline-block text-sm font-semibold text-primary underline"
+          className="android-primary-action mt-4 inline-block text-sm font-semibold text-primary underline"
         >
           {selected.length ? 'Manage all tasks' : 'Create your first task'}
         </Link>
