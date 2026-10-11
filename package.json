@@ -11,6 +11,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "icons:generate": "node scripts/generate-app-icons.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "node tests/e2e/run-scheduling.mjs",
@@ -21,7 +22,10 @@
     "db:push": "drizzle-kit push",
     "desktop:prepare": "node scripts/prepare-desktop.mjs",
     "desktop:smoke": "node scripts/smoke-desktop-server.cjs",
-    "desktop:package": "npm run build && npm run desktop:prepare && electron-builder --win nsis"
+    "desktop:package": "npm run icons:generate && npm run build && npm run desktop:prepare && electron-builder --win nsis",
+    "android:prepare": "npm run build && node scripts/prepare-android.mjs",
+    "android:smoke": "node scripts/smoke-android-server.cjs",
+    "android:apk": "npm run icons:generate && npm run android:prepare && npm run android:smoke && node scripts/build-android.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",
@@ -65,6 +69,7 @@
     "eslint-config-next": "16.3.7",
     "jsdom": "^29.1.1",
     "prettier": "^3.9.9",
+    "sharp": "^0.35.5",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.11"

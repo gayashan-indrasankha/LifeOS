@@ -4,6 +4,8 @@ For Vercel and Neon production preparation, environment settings, migrations, an
 
 For the double-click Windows application, see [DESKTOP.md](DESKTOP.md).
 
+For the experimental fully offline Android APK build, see [ANDROID.md](ANDROID.md).
+
 For reproducible release gates, migration upgrades, browser coverage, and observed outcomes, see [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md).
 
 For the current daily workflow audit and verified usability changes, see [docs/DAILY-USABILITY-AUDIT.md](docs/DAILY-USABILITY-AUDIT.md).
