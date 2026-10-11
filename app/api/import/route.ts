@@ -11,8 +11,25 @@ export async function POST(request: Request) {
   if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
   const origin = request.headers.get('origin');
-  if (origin && origin !== new URL(request.url).origin) {
-    return Response.json({ error: 'Import must come from this app.' }, { status: 403 });
+  if (origin) {
+    // Next can normalize a loopback request URL to localhost even when the
+    // Android WebView sent the request to 127.0.0.1. Check the received host.
+    const hosts = [
+      request.headers.get('host'),
+      request.headers.get('x-forwarded-host')?.split(',')[0]?.trim(),
+    ].filter(Boolean);
+    const allowedHosts = hosts.length ? hosts : [new URL(request.url).host];
+    let sameOrigin = false;
+    try {
+      const source = new URL(origin);
+      const protocol = request.headers.get('x-forwarded-proto') ?? new URL(request.url).protocol.slice(0, -1);
+      sameOrigin = source.protocol === `${protocol}:` && allowedHosts.includes(source.host);
+    } catch {
+      // A null or malformed Origin must not authorize a data replacement.
+    }
+    if (!sameOrigin) {
+      return Response.json({ error: 'Import must come from this app.' }, { status: 403 });
+    }
   }
   if (!request.headers.get('content-type')?.startsWith('application/json')) {
     return Response.json({ error: 'Choose a LifeOS JSON backup file.' }, { status: 415 });

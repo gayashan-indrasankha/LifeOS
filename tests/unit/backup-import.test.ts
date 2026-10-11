@@ -31,6 +31,37 @@ const setup = async (client: PGlite, id: string) => {
 };
 
 describe('LifeOS backup restore', () => {
+  it('accepts the WebView host when Next normalizes the request URL to localhost', async () => {
+    const response = await POST(
+      new Request('http://localhost:43123/api/import', {
+        method: 'POST',
+        headers: {
+          Host: '127.0.0.1:43123',
+          Origin: 'http://127.0.0.1:43123',
+          'Content-Type': 'application/json',
+        },
+        body: '{}',
+      }),
+    );
+    expect(response.status).toBe(400);
+    expect(await response.json()).not.toHaveProperty('error', 'Import must come from this app.');
+  });
+
+  it('rejects a backup request from another origin', async () => {
+    const response = await POST(
+      new Request('http://localhost:43123/api/import', {
+        method: 'POST',
+        headers: {
+          Host: '127.0.0.1:43123',
+          Origin: 'https://another-site.example',
+          'Content-Type': 'application/json',
+        },
+        body: '{}',
+      }),
+    );
+    expect(response.status).toBe(403);
+  });
+
   beforeAll(async () => {
     source = new PGlite();
     target = new PGlite();
