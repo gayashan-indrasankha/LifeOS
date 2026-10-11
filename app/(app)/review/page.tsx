@@ -471,7 +471,7 @@ export default async function ReviewPage() {
         </div>
       </section>
 
-      <section aria-labelledby="learn-heading" className="space-y-4">
+      <section aria-labelledby="learn-heading" className="android-learn-section space-y-4">
         <div className="flex items-center gap-2">
           <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
             02
@@ -480,8 +480,8 @@ export default async function ReviewPage() {
             Learn from the pattern
           </h2>
         </div>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <section className={card} aria-labelledby="areas-heading">
+        <div className="android-learn-grid grid gap-4 lg:grid-cols-2">
+          <section className={`android-learn-card ${card}`} aria-labelledby="areas-heading">
             <h3 id="areas-heading" className="font-bold">
               Tasks finished by life area
             </h3>
@@ -509,8 +509,8 @@ export default async function ReviewPage() {
               </p>
             )}
           </section>
-          <section className={card} aria-labelledby="evidence-heading">
-            <div className="flex flex-wrap items-start justify-between gap-3">
+          <section className={`android-learn-card ${card}`} aria-labelledby="evidence-heading">
+            <div className="android-review-heading flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h3 id="evidence-heading" className="font-bold">
                   Evidence by period
@@ -521,12 +521,12 @@ export default async function ReviewPage() {
               </div>
               <Link
                 href="/goals/evidence"
-                className="text-sm font-semibold text-primary hover:underline"
+                className="android-secondary-action text-sm font-semibold text-primary hover:underline"
               >
                 Open evidence <ArrowRight className="inline size-4" aria-hidden="true" />
               </Link>
             </div>
-            <div className="mt-4 overflow-x-auto">
+            <div className="android-evidence-scroll themed-scrollbar mt-4 overflow-x-auto">
               <table className="w-full min-w-[410px] border-separate border-spacing-y-1 text-xs">
                 <caption className="sr-only">Recorded evidence across five six-day periods</caption>
                 <thead>
@@ -588,9 +588,9 @@ export default async function ReviewPage() {
             )}
           </section>
         </div>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <section className={card} aria-labelledby="goal-heading">
-            <div className="flex items-start justify-between gap-3">
+        <div className="android-learn-grid grid gap-4 lg:grid-cols-2">
+          <section className={`android-learn-card ${card}`} aria-labelledby="goal-heading">
+            <div className="android-review-heading flex items-start justify-between gap-3">
               <div>
                 <h3 id="goal-heading" className="font-bold">
                   Goals in motion
@@ -601,7 +601,7 @@ export default async function ReviewPage() {
               </div>
               <Link
                 href="/goals?view=goals"
-                className="text-sm font-semibold text-primary hover:underline"
+                className="android-secondary-action text-sm font-semibold text-primary hover:underline"
               >
                 View goals
               </Link>
@@ -626,7 +626,7 @@ export default async function ReviewPage() {
               <p className="mt-4 text-sm text-muted-foreground">No active goals yet.</p>
             )}
           </section>
-          <section className={card} aria-labelledby="outcomes-heading">
+          <section className={`android-learn-card ${card}`} aria-labelledby="outcomes-heading">
             <h3 id="outcomes-heading" className="font-bold">
               Recorded outcomes
             </h3>
