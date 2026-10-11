@@ -68,10 +68,16 @@ test('optional meal plan can be edited, logged, cleared, paused, and resumed', a
     'aria-pressed',
     'true',
   );
-  await group.getByRole('button', { name: 'No answer' }).click();
-  await expect(group.getByRole('button', { name: 'No answer' })).toHaveAttribute(
+  await group.getByRole('button', { name: 'Missed Meal' }).click();
+  await expect(group.getByRole('button', { name: 'Missed Meal' })).toHaveAttribute(
     'aria-pressed',
     'true',
+  );
+  await expect(group.getByRole('button', { name: 'Clear choice' })).toBeVisible();
+  await group.getByRole('button', { name: 'Clear choice' }).click();
+  await expect(group.getByRole('button', { name: 'Missed Meal' })).toHaveAttribute(
+    'aria-pressed',
+    'false',
   );
   await expect(page.getByText('30 g consumed')).toBeVisible();
   await group.getByRole('button', { name: 'Ate something else' }).click();

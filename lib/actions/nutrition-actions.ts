@@ -115,7 +115,7 @@ export async function setMealStatusAction(
   if (
     !z.uuid().safeParse(mealId).success ||
     !z.iso.date().safeParse(date).success ||
-    !['followed', 'not_followed', 'not_recorded'].includes(status)
+    !['followed', 'not_followed', 'missed', 'not_recorded'].includes(status)
   )
     return { error: 'Invalid meal entry.' };
   const [meal] = await db

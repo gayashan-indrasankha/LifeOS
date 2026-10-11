@@ -38,6 +38,7 @@ export function MealChecklist({
     recordedDays: number;
     followedItems: number;
     notFollowedItems: number;
+    missedItems: number;
     unrecordedDays: number;
   };
 }) {
@@ -146,7 +147,12 @@ export function MealChecklist({
           >
             <h3 className="font-semibold">Daily nutrition totals</h3>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Actual amounts are added only when you enter them. Plans use active meals with values.
+              <span className="android-standard-copy">
+                Actual amounts are added only when you enter them. Plans use active meals with values.
+              </span>
+              <span className="android-mobile-copy">
+                Totals include only the amounts you log, with planned values shown for reference.
+              </span>
             </p>
             <div className="mt-4 grid grid-cols-2 gap-2 lg:grid-cols-4">
               {plannedTotals.items.map((item, index) => (
@@ -206,7 +212,7 @@ export function MealChecklist({
 
             return (
               <article key={meal.id} className="rounded-xl border bg-card p-4 text-sm shadow-sm">
-                <div className="flex flex-wrap items-start gap-3">
+                <div className="android-meal-heading flex flex-wrap items-start gap-3">
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold tabular-nums text-primary">
                     {String(index + 1).padStart(2, '0')}
                   </span>
@@ -316,24 +322,34 @@ export function MealChecklist({
                   aria-label={`Did you eat ${meal.name} as planned on ${date}?`}
                 >
                   <p className="text-xs font-semibold">Did this meal match your plan?</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {(['followed', 'not_followed', 'not_recorded'] as const).map((status) => (
+                  <div className="android-meal-choices mt-2 flex flex-wrap gap-2">
+                    {(['followed', 'not_followed', 'missed'] as const).map((status) => (
                       <button
                         key={status}
                         type="button"
                         disabled={pending && pendingId === meal.id}
-                        aria-pressed={(statuses[meal.id] ?? 'not_recorded') === status}
+                        aria-pressed={statuses[meal.id] === status}
                         onClick={() => record(meal.id, status)}
-                        className={`min-h-10 rounded-lg border px-3 text-xs font-medium transition-colors disabled:opacity-60 ${status !== 'not_recorded' && statuses[meal.id] === status ? 'border-primary bg-primary/10 text-primary' : 'bg-muted/30 text-foreground hover:border-primary/40 hover:bg-primary/5'}`}
+                        className={`min-h-10 rounded-lg border px-3 text-xs font-medium transition-colors disabled:opacity-60 ${statuses[meal.id] === status ? 'border-primary bg-primary/10 text-primary' : 'bg-muted/30 text-foreground hover:border-primary/40 hover:bg-primary/5'}`}
                       >
                         {status === 'followed'
                           ? 'Ate as planned'
                           : status === 'not_followed'
                             ? 'Ate something else'
-                            : 'No answer'}
+                            : 'Missed Meal'}
                       </button>
                     ))}
                   </div>
+                  {statuses[meal.id] && (
+                    <button
+                      type="button"
+                      disabled={pending && pendingId === meal.id}
+                      onClick={() => record(meal.id, 'not_recorded')}
+                      className="mt-2 min-h-9 text-xs font-medium text-muted-foreground underline-offset-2 hover:text-primary hover:underline disabled:opacity-60"
+                    >
+                      Clear choice
+                    </button>
+                  )}
                 </div>
               </article>
             );
@@ -355,10 +371,16 @@ export function MealChecklist({
             <span>{summary.recordedDays} days logged</span>
             <span>{summary.followedItems} meals as planned</span>
             <span>{summary.notFollowedItems} meals changed</span>
+            <span>{summary.missedItems} meals missed</span>
             <span>{summary.unrecordedDays} days not logged</span>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            This tracks meal choices separately from the actual amounts you enter.
+            <span className="android-standard-copy">
+              This tracks meal choices separately from the actual amounts you enter.
+            </span>
+            <span className="android-mobile-copy">
+              Meal choices and actual amounts are tracked separately.
+            </span>
           </p>
         </div>
       </div>

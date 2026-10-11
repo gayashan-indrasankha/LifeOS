@@ -9,15 +9,17 @@ describe('optional meal checklist feedback', () => {
           { date: '2026-10-05', status: 'followed' },
           { date: '2026-10-05', status: 'not_followed' },
           { date: '2026-10-07', status: 'followed' },
+          { date: '2026-10-08', status: 'missed' },
         ],
         '2026-10-05',
         '2026-10-09',
       ),
     ).toEqual({
-      recordedDays: 2,
+      recordedDays: 3,
       followedItems: 2,
       notFollowedItems: 1,
-      unrecordedDays: 3,
+      missedItems: 1,
+      unrecordedDays: 2,
     });
   });
 
@@ -36,6 +38,7 @@ describe('optional meal checklist feedback', () => {
       recordedDays: 1,
       followedItems: 1,
       notFollowedItems: 0,
+      missedItems: 0,
       unrecordedDays: 6,
     });
     expect(mealWeekSummary([], '2026-10-05', '2026-10-05').unrecordedDays).toBe(1);

@@ -1,6 +1,6 @@
 import { addCalendarDays } from '@/lib/planning/time-blocks';
 
-export type MealStatus = 'followed' | 'not_followed';
+export type MealStatus = 'followed' | 'not_followed' | 'missed';
 export type MealLog = { date: string; status: MealStatus | null };
 
 export type ActualMealAmounts = {
@@ -59,6 +59,7 @@ export function mealWeekSummary(logs: MealLog[], start: string, today: string) {
     recordedDays,
     followedItems: inWeek.filter((item) => item.status === 'followed').length,
     notFollowedItems: inWeek.filter((item) => item.status === 'not_followed').length,
+    missedItems: inWeek.filter((item) => item.status === 'missed').length,
     unrecordedDays: days.length - recordedDays,
   };
 }
