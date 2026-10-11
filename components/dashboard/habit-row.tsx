@@ -95,7 +95,7 @@ export function HabitRow({
     <tr className="group hover:bg-primary/[0.025]">
       <th
         scope="row"
-        className="sticky left-0 z-10 w-48 min-w-48 max-w-48 border-b bg-card px-4 py-3 text-left group-hover:bg-[#f7faff] dark:group-hover:bg-muted"
+        className="habit-grid-habit sticky left-0 z-10 w-32 min-w-32 max-w-32 border-b border-r bg-card px-2 py-2 text-left group-hover:bg-[#f7faff] min-[375px]:w-36 min-[375px]:min-w-36 min-[375px]:max-w-36 min-[420px]:w-40 min-[420px]:min-w-40 min-[420px]:max-w-40 sm:w-48 sm:min-w-48 sm:max-w-48 sm:border-r-0 sm:px-4 sm:py-3 dark:group-hover:bg-muted"
       >
         <HabitNameTooltip
           name={habit.name}
@@ -109,15 +109,17 @@ export function HabitRow({
           </span>
         )}
       </th>
-      <td className="w-20 min-w-20 border-b px-2 py-3 text-center font-semibold tabular-nums">
+      <td className="habit-grid-goal w-14 min-w-14 border-b px-1 py-2 text-center text-xs font-semibold tabular-nums sm:w-20 sm:min-w-20 sm:px-2 sm:py-3 sm:text-sm">
         {flexible ? `${displayedRule?.schedule.split(':')[1]}/week` : progress.goal}
       </td>
-      <td className="w-28 min-w-28 border-b px-2 py-3">
+      <td className="habit-grid-progress w-24 min-w-24 border-b px-2 py-2 sm:w-28 sm:min-w-28 sm:py-3">
         <div className="flex items-baseline justify-between gap-1 tabular-nums">
-          <span className="font-semibold">
+          <span className="text-xs font-semibold sm:text-sm">
             {displayedProgress.completed} / {displayedProgress.goal}
           </span>
-          <span className="text-xs text-muted-foreground">{displayedProgress.percentage}%</span>
+          <span className="text-[11px] text-muted-foreground sm:text-xs">
+            {displayedProgress.percentage}%
+          </span>
         </div>
         <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
           <div

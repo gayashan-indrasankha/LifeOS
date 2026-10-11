@@ -19,7 +19,10 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        channel: process.env.HABITFLOW_E2E_BROWSER_CHANNEL === 'chrome' ? 'chrome' : undefined,
+      },
     },
   ],
   webServer: {

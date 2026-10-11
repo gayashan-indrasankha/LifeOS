@@ -35,7 +35,12 @@ export const DayCell = memo(function DayCell({
     ? `${isCompleted ? 'Completed' : 'Not completed'} for ${habitName} on ${date} (past day locked)`
     : `${isCompleted ? 'Remove completion' : 'Mark complete'} for ${habitName} on ${date}`;
   return (
-    <td className={cn('w-10 min-w-10 border-b p-1 text-center', isToday && 'bg-primary/5')}>
+    <td
+      className={cn(
+        'habit-grid-day w-11 min-w-11 border-b p-0.5 text-center sm:w-10 sm:min-w-10 sm:p-1',
+        isToday && 'sm:bg-primary/5',
+      )}
+    >
       {isEligible || isCompleted ? (
         <button
           type="button"
@@ -45,7 +50,7 @@ export const DayCell = memo(function DayCell({
           disabled={isPast || isFuture || isBusy || isReadOnly}
           onClick={() => onToggle(date)}
           className={cn(
-            'mx-auto flex h-7 w-7 items-center justify-center rounded-[5px] border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+            'mx-auto flex h-10 w-10 items-center justify-center rounded-[5px] border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:h-7 sm:w-7',
             isCompleted
               ? 'border-primary bg-primary text-primary-foreground shadow-sm'
               : 'border-border bg-background hover:border-primary hover:bg-primary/5',

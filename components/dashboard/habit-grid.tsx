@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -39,6 +39,7 @@ export function HabitGrid({
   weekStartsOn = 1,
 }: HabitGridProps) {
   const [currentDay, setCurrentDay] = useState(today);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const mountedAt = Date.now();
@@ -53,6 +54,46 @@ export function HabitGrid({
       document.removeEventListener('visibilitychange', refreshDay);
     };
   }, [clockStartedAt, timezone]);
+
+  useLayoutEffect(() => {
+    const scrollArea = scrollRef.current;
+    if (!scrollArea) return;
+    const mobile = window.matchMedia('(max-width: 639px)');
+
+    const showCurrentDay = () => {
+      if (!mobile.matches) {
+        scrollArea.style.removeProperty('--habit-day-width');
+        return;
+      }
+      const fixedHeaders = scrollArea.querySelectorAll<HTMLElement>('[data-fixed-column]');
+      const fixedWidth = Array.from(fixedHeaders).reduce(
+        (width, header) => width + header.getBoundingClientRect().width,
+        0,
+      );
+      scrollArea.style.setProperty(
+        '--habit-day-width',
+        `${Math.max(44, scrollArea.clientWidth - fixedWidth)}px`,
+      );
+      const dayHeader = Array.from(scrollArea.querySelectorAll<HTMLElement>('[data-habit-date]'))
+        .find((header) => header.dataset.habitDate === currentDay);
+      if (!dayHeader) {
+        scrollArea.scrollLeft = 0;
+        return;
+      }
+      const dayLeft = dayHeader.getBoundingClientRect().left
+        - scrollArea.getBoundingClientRect().left + scrollArea.scrollLeft;
+      scrollArea.scrollLeft = dayLeft - fixedWidth;
+    };
+
+    showCurrentDay();
+    const observer = new ResizeObserver(showCurrentDay);
+    observer.observe(scrollArea);
+    mobile.addEventListener('change', showCurrentDay);
+    return () => {
+      observer.disconnect();
+      mobile.removeEventListener('change', showCurrentDay);
+    };
+  }, [days, currentDay]);
 
   if (habits.length === 0) {
     return (
@@ -85,10 +126,10 @@ export function HabitGrid({
   return (
     <section
       aria-label="Monthly tracker"
-      className="overflow-hidden rounded-2xl border bg-card shadow-[0_10px_35px_rgba(25,48,100,.08)]"
+      className="min-w-0 overflow-hidden rounded-2xl border bg-card shadow-[0_10px_35px_rgba(25,48,100,.08)]"
     >
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b px-5 py-4">
-        <div>
+      <div className="flex flex-col items-start gap-2 border-b px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div className="min-w-0">
           <h2 className="font-bold tracking-tight">Monthly habits</h2>
           <p className="text-xs text-muted-foreground">
             Check off today’s habits. Past days are locked after midnight. Scroll to see the month.
@@ -99,7 +140,8 @@ export function HabitGrid({
         </span>
       </div>
       <div
-        className="themed-scrollbar overflow-x-auto overscroll-x-contain"
+        ref={scrollRef}
+        className="habit-grid-scroll themed-scrollbar w-full max-w-full overflow-x-auto overscroll-x-contain"
         tabIndex={0}
         aria-label="Scroll monthly tracker horizontally"
       >
@@ -112,21 +154,24 @@ export function HabitGrid({
               <th
                 scope="col"
                 rowSpan={2}
-                className="sticky left-0 z-20 w-48 min-w-48 border-r border-white/20 bg-primary px-4 py-3 text-left"
+                data-fixed-column="habit"
+                className="sticky left-0 z-20 w-32 min-w-32 max-w-32 border-r border-white/20 bg-primary px-2 py-3 text-left min-[375px]:w-36 min-[375px]:min-w-36 min-[375px]:max-w-36 min-[420px]:w-40 min-[420px]:min-w-40 min-[420px]:max-w-40 sm:w-48 sm:min-w-48 sm:max-w-48 sm:px-4"
               >
                 Habit
               </th>
               <th
                 scope="col"
                 rowSpan={2}
-                className="w-20 min-w-20 border-r border-white/20 px-2 py-3 text-center"
+                data-fixed-column="goal"
+                className="habit-grid-goal w-14 min-w-14 border-r border-white/20 px-1 py-3 text-center sm:w-20 sm:min-w-20 sm:px-2"
               >
                 Goal
               </th>
               <th
                 scope="col"
                 rowSpan={2}
-                className="w-28 min-w-28 border-r border-white/20 px-2 py-3 text-left"
+                data-fixed-column="progress"
+                className="habit-grid-progress w-24 min-w-24 border-r border-white/20 px-2 py-3 text-left sm:w-28 sm:min-w-28"
               >
                 Progress
               </th>
@@ -146,8 +191,9 @@ export function HabitGrid({
                 <th
                   scope="col"
                   key={day.date}
+                  data-habit-date={day.date}
                   title={day.date}
-                  className={`w-10 min-w-10 border-b border-r px-0 py-2 text-center ${day.date === currentDay ? 'bg-primary/10 text-primary' : day.dayOfWeek === 0 || day.dayOfWeek === 6 ? 'bg-slate-100 dark:bg-muted/60' : ''}`}
+                  className={`habit-grid-day w-11 min-w-11 border-b border-r px-0 py-2 text-center sm:w-10 sm:min-w-10 ${day.date === currentDay ? 'sm:bg-primary/10 sm:text-primary' : day.dayOfWeek === 0 || day.dayOfWeek === 6 ? 'bg-slate-100 dark:bg-muted/60' : ''}`}
                 >
                   <span className="block text-[10px] font-medium">{day.weekday}</span>
                   <span className="block text-xs font-bold">{day.day}</span>
