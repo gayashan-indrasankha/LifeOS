@@ -20,13 +20,6 @@ import {
 
 const options: SetupOptions = {
   sections: Object.keys(sectionLabels) as SetupOptions['sections'],
-  mondayStart: '08:00',
-  mondayEnd: '18:30',
-  tuesdayStart: '08:00',
-  tuesdayEnd: '15:00',
-  calories: 3207,
-  protein: 157,
-  updateSchedule: false,
   confirm: true,
 };
 let client: PGlite;
@@ -57,19 +50,33 @@ describe('Personal Life OS isolated PGlite installation', () => {
 
   it('previews without writes, installs linked data, and repeats without duplicates', async () => {
     const preview = await previewPersonalLifeOs('owner', options);
-    expect(preview.items.filter((item) => item.status === 'new')).toHaveLength(114);
+    expect(preview.items.filter((item) => item.status === 'new')).toHaveLength(82);
+    expect(preview.items.some((item) => item.type === 'Weekly block')).toBe(false);
     expect(await count('goals')).toBe(0);
     const result = await installPersonalLifeOs('owner', options);
     expect(result.conflicts).toBe(0);
-    expect(result.created).toBe(114);
-    expect(await count('goals')).toBe(9);
+    expect(result.created).toBe(82);
+    expect(await count('goals')).toBe(8);
     expect(await count('projects')).toBe(3);
-    expect(await count('tasks')).toBe(40);
+    expect(await count('tasks')).toBe(30);
     expect(await count('subjects')).toBe(5);
     expect(await count('habits')).toBe(8);
-    expect(await count('time_blocks')).toBe(22);
+    expect(await count('time_blocks')).toBe(0);
     expect(await count('interview_topics')).toBe(21);
     expect(await count('meal_templates')).toBe(6);
+    const blankMeals = await client.query<{ count: number }>(
+      `SELECT count(*)::int AS count FROM meal_templates WHERE user_id='owner' AND planned_calories IS NULL AND planned_protein IS NULL AND planned_carbs IS NULL AND planned_fat IS NULL`,
+    );
+    expect(blankMeals.rows[0].count).toBe(6);
+    const unplannedTasks = await client.query<{ count: number }>(
+      `SELECT count(*)::int AS count FROM tasks WHERE user_id='owner' AND scheduled_date IS NULL AND daily_priority IS NULL`,
+    );
+    expect(unplannedTasks.rows[0].count).toBe(30);
+    const nutrition = await client.query<{ nutrition_enabled: boolean }>(
+      'SELECT nutrition_enabled FROM user_settings WHERE user_id=$1',
+      ['owner'],
+    );
+    expect(nutrition.rows[0].nutrition_enabled).toBe(true);
     expect(await count('goals', 'other')).toBe(0);
     expect(await count('metric_entries')).toBe(0);
     expect(await count('habit_entries')).toBe(0);
@@ -93,16 +100,16 @@ describe('Personal Life OS isolated PGlite installation', () => {
       `DELETE FROM meal_templates WHERE user_id='owner' AND template_key='meal-6'`,
     );
     await client.query(
-      `DELETE FROM tasks WHERE user_id='owner' AND template_key='english-prompt-10'`,
+      `DELETE FROM tasks WHERE user_id='owner' AND template_key='academic-starter-5'`,
     );
     const preview = await previewPersonalLifeOs('owner', options);
     expect(preview.items.find((item) => item.key === 'meal-6')?.status).toBe('deleted');
-    expect(preview.items.find((item) => item.key === 'english-prompt-10')?.status).toBe('deleted');
+    expect(preview.items.find((item) => item.key === 'academic-starter-5')?.status).toBe('deleted');
     expect(preview.items.find((item) => item.key === 'university')?.status).toBe('existing');
     const repeat = await installPersonalLifeOs('owner', options);
     expect(repeat.created).toBe(0);
     expect(await count('meal_templates')).toBe(5);
-    expect(await count('tasks')).toBe(39);
+    expect(await count('tasks')).toBe(29);
     const title = await client.query<{ title: string }>(
       `SELECT title FROM goals WHERE user_id='owner' AND template_key='university'`,
     );
@@ -129,55 +136,43 @@ describe('Personal Life OS isolated PGlite installation', () => {
     expect(status.rows[0].status).toBe('archived');
   }, 120_000);
 
-  it('skips a fixed conflict and keeps accounts isolated', async () => {
+  it('leaves legacy time blocks untouched and keeps accounts isolated', async () => {
     await client.query(
       `INSERT INTO time_blocks (user_id,title,category,local_start_time,local_end_time,weekday_mask,start_date,is_fixed) VALUES ('other','Existing fixed lecture','University','09:00','10:00','1000000','2026-10-01',true)`,
     );
     const university = { ...options, sections: ['university'] as SetupOptions['sections'] };
     const preview = await previewPersonalLifeOs('other', university);
-    expect(preview.items.find((item) => item.key === 'lecture-mon')?.status).toBe('conflict');
+    expect(preview.items.some((item) => item.type === 'Weekly block')).toBe(false);
+    expect(preview.needsInput.every((item) => !item.includes('meal'))).toBe(true);
     const result = await installPersonalLifeOs('other', university);
-    expect(result.conflicts).toBeGreaterThan(0);
+    expect(result.conflicts).toBe(0);
     const lecture = await client.query<{ count: number }>(
       `SELECT count(*)::int AS count FROM time_blocks WHERE user_id='other' AND template_key='lecture-mon'`,
     );
     expect(lecture.rows[0].count).toBe(0);
-    expect(await count('goals', 'owner')).toBe(9);
+    expect(await count('time_blocks', 'other')).toBe(1);
+    const otherSettings = await client.query<{ nutrition_enabled: boolean }>(
+      'SELECT nutrition_enabled FROM user_settings WHERE user_id=$1',
+      ['other'],
+    );
+    expect(otherSettings.rows[0].nutrition_enabled).toBe(false);
+    expect(await count('goals', 'owner')).toBe(8);
     expect(await count('goals', 'other')).toBe(1);
   }, 120_000);
 
-  it('applies an explicit dated revision only to an untouched legacy series', async () => {
-    const block = await client.query<{ id: string }>(
-      `UPDATE time_blocks SET title='Academic consolidation', weekday_mask='0000010', local_start_time='09:00', local_end_time='11:00', start_date='2026-09-01' WHERE user_id='owner' AND template_key='academic-sat' RETURNING id`,
+  it('does not resume a nutrition checklist that was later paused', async () => {
+    await client.query(`UPDATE user_settings SET nutrition_enabled=false WHERE user_id='owner'`);
+    const preview = await previewPersonalLifeOs('owner', options);
+    expect(preview.items.find((item) => item.type === 'Nutrition checklist')?.status).toBe(
+      'archived',
     );
-    const id = block.rows[0].id;
-    await client.query('DELETE FROM time_block_revisions WHERE block_id=$1', [id]);
-    await client.query(
-      `INSERT INTO time_block_exceptions (user_id,block_id,occurrence_date,status) VALUES ('owner',$1,'2026-10-03','completed')`,
-      [id],
+    const repeat = await installPersonalLifeOs('owner', options);
+    expect(repeat.created).toBe(0);
+    const setting = await client.query<{ nutrition_enabled: boolean }>(
+      'SELECT nutrition_enabled FROM user_settings WHERE user_id=$1',
+      ['owner'],
     );
-    const updateOptions = {
-      ...options,
-      updateSchedule: true,
-      sections: ['university'] as SetupOptions['sections'],
-    };
-    const preview = await previewPersonalLifeOs('owner', updateOptions);
-    expect(preview.items.find((item) => item.key === 'academic-sat')?.status).toBe('update');
-    const result = await installPersonalLifeOs('owner', updateOptions);
-    expect(result.updated).toBe(1);
-    const revision = await client.query<{ local_start_time: string; effective_date: string }>(
-      'SELECT local_start_time,effective_date FROM time_block_revisions WHERE block_id=$1',
-      [id],
-    );
-    expect(revision.rows[0].local_start_time).toBe('08:30');
-    expect(new Date(revision.rows[0].effective_date).toISOString().slice(0, 10)).toBe('2026-10-09');
-    const history = await client.query<{ status: string }>(
-      'SELECT status FROM time_block_exceptions WHERE block_id=$1 AND occurrence_date=$2',
-      [id, '2026-10-03'],
-    );
-    expect(history.rows[0].status).toBe('completed');
-    const repeat = await installPersonalLifeOs('owner', updateOptions);
-    expect(repeat.updated).toBe(0);
+    expect(setting.rows[0].nutrition_enabled).toBe(false);
   }, 120_000);
 
   it('rolls back every inserted record if a mandatory insert fails', async () => {

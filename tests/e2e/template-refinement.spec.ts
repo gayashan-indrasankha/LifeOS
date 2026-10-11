@@ -25,7 +25,6 @@ test('Life OS preview is read-only and repeat installation preserves existing re
     'fitness',
     'nutrition',
     'recovery',
-    'review',
   ])
     await page.locator(`input[name="section"][value="${section}"]`).check();
   await page.getByRole('button', { name: 'Preview changes' }).click();
@@ -33,6 +32,8 @@ test('Life OS preview is read-only and repeat installation preserves existing re
   await expect(page.getByText('Subject 5', { exact: true })).toHaveCount(1);
   await expect(page.getByText('Morning weight check reminder', { exact: true })).toHaveCount(1);
   await expect(page.getByText('Before-bed milk or optional snack', { exact: true })).toHaveCount(1);
+  await expect(page.getByText('Show meal checklist on Today', { exact: true })).toHaveCount(1);
+  await expect(page.getByText('Weekly review', { exact: true })).toHaveCount(0);
   const firstNewCount = await page.getByLabel('Preview counts').locator('span').first().innerText();
 
   await page.reload();

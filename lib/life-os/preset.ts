@@ -1,7 +1,5 @@
-import { normalizeLifeArea } from '@/lib/life-areas';
-
 export const PRESET_ID = 'personal-life-os';
-export const PRESET_VERSION = 2;
+export const PRESET_VERSION = 3;
 
 export const sectionLabels = {
   university: 'University',
@@ -12,7 +10,6 @@ export const sectionLabels = {
   fitness: 'Fitness and recovery',
   nutrition: 'Optional nutrition plan',
   recovery: 'Reading, meditation, sleep and focus',
-  review: 'Weekly review',
 } as const;
 export type Section = keyof typeof sectionLabels;
 
@@ -35,15 +32,6 @@ export type HabitPreset = Item & {
   schedule: string;
   target: number;
   description?: string;
-};
-export type BlockPreset = Item & {
-  area: string;
-  mask: string;
-  start: string;
-  end: string;
-  fixed?: boolean;
-  goal?: string;
-  project?: string;
 };
 export type TopicPreset = Item & { category: string; track: 'Shared' | 'SE' | 'DevOps' };
 export type MealPreset = Item & { order: number; notes?: string };
@@ -91,18 +79,10 @@ export const goals: GoalPreset[] = [
     key: 'body-weight',
     section: 'fitness',
     area: 'Fitness',
-    name: 'Plan an eight-month bulk from approximately 70 kg toward 80 kg',
+    name: 'Work toward an 80 kg body-weight goal',
     targetValue: 80,
     targetUnit: 'kg',
-    description: '70 kg is a planning baseline, not a measured entry.',
-  },
-  {
-    key: 'nutrition-reference',
-    section: 'nutrition',
-    area: 'Fitness',
-    name: 'Follow an optional nutrition plan',
-    description:
-      'Approximately 3,207 kcal and 157 g protein are editable daily planning references, not consumed totals.',
+    description: 'Set a personal target in Goals and record measured weight on Today.',
   },
   {
     key: 'sleep-recovery',
@@ -190,24 +170,6 @@ export const tasks: TaskPreset[] = [
     'Document architecture and reproducible setup',
     'Prepare a technical demonstration',
   ]),
-  ...[
-    'Introduce yourself professionally',
-    'Explain your university project',
-    'Explain an API',
-    'Explain Docker',
-    'Describe a difficult bug',
-    'Explain a technical decision',
-    'Describe teamwork',
-    'Answer a behavioral interview question',
-    'Explain a concept without notes',
-    'Practise a technical mock interview',
-  ].map((name, index) => ({
-    key: `english-prompt-${index + 1}`,
-    section: 'english' as const,
-    goal: 'communication',
-    name,
-    details: 'Reusable speaking prompt; no practice result has been recorded.',
-  })),
 ];
 
 export const habits: HabitPreset[] = [
@@ -215,7 +177,7 @@ export const habits: HabitPreset[] = [
     key: 'academic-recall',
     section: 'university',
     name: 'Academic active recall',
-    category: 'University',
+    category: 'Education & Skills',
     schedule: 'weekly:5',
     target: 20,
   },
@@ -223,7 +185,7 @@ export const habits: HabitPreset[] = [
     key: 'english-daily',
     section: 'english',
     name: 'English speaking practice (20–30 min)',
-    category: 'Communication',
+    category: 'Personal Development',
     schedule: 'daily',
     target: 25,
   },
@@ -248,7 +210,7 @@ export const habits: HabitPreset[] = [
     key: 'reading',
     section: 'recovery',
     name: 'Read 10 pages daily',
-    category: 'Reading',
+    category: 'Education & Skills',
     schedule: 'daily',
     target: 25,
   },
@@ -264,7 +226,7 @@ export const habits: HabitPreset[] = [
     key: 'sleep-routine',
     section: 'recovery',
     name: 'Sleep routine: 23:00–06:30',
-    category: 'Sleep & Recovery',
+    category: 'Fitness',
     schedule: 'daily',
     target: 25,
     description: 'Plan bedtime and wake time; this is not an overnight time block.',
@@ -273,230 +235,10 @@ export const habits: HabitPreset[] = [
     key: 'phone-shutdown',
     section: 'recovery',
     name: 'Evening phone shutdown by 22:15',
-    category: 'Focus',
+    category: 'Personal Development',
     schedule: 'daily',
     target: 25,
   },
-];
-
-const block = (
-  key: string,
-  section: Section,
-  name: string,
-  area: string,
-  day: number,
-  start: string,
-  end: string,
-  fixed = false,
-  goal?: string,
-  project?: string,
-): BlockPreset => ({
-  key,
-  section,
-  name,
-  area: normalizeLifeArea(area),
-  mask: Array.from({ length: 7 }, (_, index) => (index === day ? '1' : '0')).join(''),
-  start,
-  end,
-  fixed,
-  goal,
-  project,
-});
-export const blocks: BlockPreset[] = [
-  block(
-    'lecture-mon',
-    'university',
-    'University lectures',
-    'University',
-    0,
-    '08:00',
-    '18:30',
-    true,
-    'university',
-  ),
-  block(
-    'lecture-tue',
-    'university',
-    'University lectures',
-    'University',
-    1,
-    '08:00',
-    '15:00',
-    true,
-    'university',
-  ),
-  block(
-    'recall-mon',
-    'university',
-    'Same-day lecture recall',
-    'University',
-    0,
-    '20:00',
-    '20:30',
-    false,
-    'university',
-  ),
-  block(
-    'consolidate-tue',
-    'university',
-    'Lecture consolidation and assignments',
-    'University',
-    1,
-    '19:30',
-    '20:45',
-    false,
-    'university',
-  ),
-  block(
-    'study-wed',
-    'university',
-    'Subject-focused deep work',
-    'University',
-    2,
-    '08:00',
-    '10:00',
-    false,
-    'university',
-  ),
-  block(
-    'study-thu',
-    'university',
-    'Subject-focused deep work',
-    'University',
-    3,
-    '08:00',
-    '10:00',
-    false,
-    'university',
-  ),
-  block(
-    'study-fri',
-    'university',
-    'Weakest subject or rotation',
-    'University',
-    4,
-    '08:00',
-    '10:00',
-    false,
-    'university',
-  ),
-  block(
-    'academic-sat',
-    'university',
-    'Past-paper practice and consolidation',
-    'University',
-    5,
-    '08:30',
-    '10:30',
-    false,
-    'university',
-  ),
-  block(
-    'weakness-sun',
-    'university',
-    'Weak-topic revision',
-    'University',
-    6,
-    '09:30',
-    '11:00',
-    false,
-    'university',
-  ),
-  block(
-    'industry-wed',
-    'industry',
-    'Industry Project work',
-    'Industry Project',
-    2,
-    '13:30',
-    '15:00',
-    false,
-    'industry',
-    'industry-project',
-  ),
-  block(
-    'industry-fri',
-    'industry',
-    'Industry Project work',
-    'Industry Project',
-    4,
-    '14:00',
-    '15:30',
-    false,
-    'industry',
-    'industry-project',
-  ),
-  block(
-    'se-practice',
-    'career',
-    'SE project deep work',
-    'Career',
-    3,
-    '10:30',
-    '12:30',
-    false,
-    'se-portfolio',
-    'se-project',
-  ),
-  block(
-    'portfolio-sat',
-    'career',
-    'SE and DevOps portfolio rotation',
-    'Career',
-    5,
-    '11:00',
-    '13:00',
-  ),
-  block(
-    'devops-practice',
-    'career',
-    'DevOps practical work',
-    'Career',
-    4,
-    '10:30',
-    '12:30',
-    false,
-    'devops-portfolio',
-    'devops-project',
-  ),
-  block(
-    'interview-thu',
-    'interview',
-    'Technical interview practice',
-    'Interview Preparation',
-    3,
-    '14:00',
-    '15:00',
-    false,
-    'interviews',
-  ),
-  block(
-    'interview-sat',
-    'interview',
-    'Mock interview practice',
-    'Interview Preparation',
-    5,
-    '14:30',
-    '15:30',
-    false,
-    'interviews',
-  ),
-  block(
-    'english-sun',
-    'english',
-    'Integrated technical and English speaking',
-    'Communication',
-    6,
-    '15:00',
-    '16:00',
-    false,
-    'communication',
-  ),
-  block('gym-tue', 'fitness', 'Gym training', 'Fitness', 1, '16:30', '18:00', false, 'body-weight'),
-  block('gym-wed', 'fitness', 'Gym training', 'Fitness', 2, '16:30', '18:00', false, 'body-weight'),
-  block('gym-fri', 'fitness', 'Gym training', 'Fitness', 4, '16:30', '18:00', false, 'body-weight'),
-  block('gym-sat', 'fitness', 'Gym training', 'Fitness', 5, '16:30', '18:00', false, 'body-weight'),
-  block('weekly-review', 'review', 'Weekly review', 'Personal Development', 6, '08:30', '09:00'),
 ];
 
 const shared = [
@@ -565,4 +307,4 @@ export const meals: MealPreset[] = [
   notes: 'Add foods, portions, preferred time and optional planned macros when known.',
 }));
 
-export const presetItems = { goals, projects, tasks, habits, blocks, topics, meals } as const;
+export const presetItems = { goals, projects, tasks, habits, topics, meals } as const;

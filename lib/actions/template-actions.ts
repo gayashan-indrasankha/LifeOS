@@ -15,32 +15,16 @@ import type { LifeActionState } from './life-actions';
 const section = z.enum(
   Object.keys(sectionLabels) as [keyof typeof sectionLabels, ...(keyof typeof sectionLabels)[]],
 );
-const clock = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 const inputSchema = z.object({
   sections: z.array(section).min(1),
-  mondayStart: clock,
-  mondayEnd: clock,
-  tuesdayStart: clock,
-  tuesdayEnd: clock,
-  calories: z.coerce.number().int().min(1000).max(6000),
-  protein: z.coerce.number().int().min(20).max(400),
 });
 
 function parse(form: FormData): SetupOptions {
   const input = inputSchema.parse({
     sections: form.getAll('section'),
-    mondayStart: form.get('mondayStart'),
-    mondayEnd: form.get('mondayEnd'),
-    tuesdayStart: form.get('tuesdayStart'),
-    tuesdayEnd: form.get('tuesdayEnd'),
-    calories: form.get('calories'),
-    protein: form.get('protein'),
   });
-  if (input.mondayEnd <= input.mondayStart || input.tuesdayEnd <= input.tuesdayStart)
-    throw new Error('Lecture end time must be after its start time.');
   return {
     ...input,
-    updateSchedule: form.get('updateSchedule') === 'yes',
     confirm: form.get('confirm') === 'yes',
   };
 }
@@ -78,14 +62,13 @@ export async function applyLifeTemplateAction(
       '/week',
       '/habits',
       '/goals',
-      '/projects',
       '/review',
       '/settings',
       '/settings/life-os',
     ])
       revalidatePath(path);
     return {
-      success: `Created ${result.created} items. Updated ${result.updated} future schedules. Kept ${result.existing} existing or previously removed items. ${result.conflicts} need review.`,
+      success: `Created ${result.created} items. Kept ${result.existing} existing or previously removed items. ${result.conflicts} need review.`,
     };
   } catch (error) {
     return {

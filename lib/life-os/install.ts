@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
   goals,
@@ -7,25 +7,13 @@ import {
   subjects,
   habits,
   habitScheduleRevisions,
-  timeBlocks,
-  timeBlockRevisions,
-  timeBlockExceptions,
   interviewTopics,
   mealTemplates,
   userSettings,
   lifeOsSeedItems,
 } from '@/lib/db/schema';
-import {
-  expandBlocks,
-  futureBoundaryDates,
-  overlaps,
-  type BlockRule,
-  type BlockRevision,
-  type BlockException,
-} from '@/lib/planning/time-blocks';
 import { getTodayInTimezone, toDateString } from '@/lib/utils/date';
 import {
-  blocks,
   goals as goalPreset,
   habits as habitPreset,
   meals,
@@ -42,40 +30,13 @@ export type PlanItem = {
   key: string;
   name: string;
   detail: string;
-  status: 'new' | 'update' | 'existing' | 'archived' | 'deleted' | 'duplicate' | 'conflict';
+  status: 'new' | 'existing' | 'archived' | 'deleted' | 'duplicate' | 'conflict';
   reason?: string;
 };
 export type Plan = { items: PlanItem[]; needsInput: string[]; today: string };
 export type SetupOptions = {
   sections: Section[];
-  mondayStart: string;
-  mondayEnd: string;
-  tuesdayStart: string;
-  tuesdayEnd: string;
-  calories: number;
-  protein: number;
-  updateSchedule: boolean;
   confirm: boolean;
-};
-
-// Only unchanged first-generation managed rules qualify for an offered revision.
-// A changed title, time, day or any existing revision means the user has edited
-// the series and setup leaves it alone.
-const legacyRules: Record<string, { title: string; mask: string; start: string; end: string }> = {
-  'academic-sat': {
-    title: 'Academic consolidation',
-    mask: '0000010',
-    start: '09:00',
-    end: '11:00',
-  },
-  'weakness-sun': { title: 'Review weak subjects', mask: '0000001', start: '10:00', end: '11:00' },
-  'se-practice': { title: 'Practical coding', mask: '0010010', start: '11:30', end: '13:00' },
-  'devops-practice': {
-    title: 'Apply DevOps learning',
-    mask: '0001100',
-    start: '11:30',
-    end: '13:00',
-  },
 };
 
 const active = (status: string | null | undefined) => status !== 'archived' && status !== 'paused';
@@ -94,9 +55,6 @@ async function inspect(tx: Tx, userId: string, options: SetupOptions): Promise<P
     savedTasks,
     savedSubjects,
     savedHabits,
-    savedBlocks,
-    savedRevisions,
-    savedExceptions,
     savedTopics,
     savedMeals,
     seedItems,
@@ -106,9 +64,6 @@ async function inspect(tx: Tx, userId: string, options: SetupOptions): Promise<P
     tx.select().from(tasks).where(eq(tasks.userId, userId)),
     tx.select().from(subjects).where(eq(subjects.userId, userId)),
     tx.select().from(habits).where(eq(habits.userId, userId)),
-    tx.select().from(timeBlocks).where(eq(timeBlocks.userId, userId)),
-    tx.select().from(timeBlockRevisions).where(eq(timeBlockRevisions.userId, userId)),
-    tx.select().from(timeBlockExceptions).where(eq(timeBlockExceptions.userId, userId)),
     tx.select().from(interviewTopics).where(eq(interviewTopics.userId, userId)),
     tx.select().from(mealTemplates).where(eq(mealTemplates.userId, userId)),
     tx.select().from(lifeOsSeedItems).where(eq(lifeOsSeedItems.userId, userId)),
@@ -232,7 +187,7 @@ async function inspect(tx: Tx, userId: string, options: SetupOptions): Promise<P
       'Meal template',
       item.key,
       item.name,
-      'Optional editable slot; no meal or calories are logged.',
+      'Editable meal slot; set planned calories, protein, carbs and fat in Settings, then log actual amounts on Today.',
       existing,
       savedMeals.some((row) => !row.templateKey && row.name === item.name),
     );
@@ -247,170 +202,27 @@ async function inspect(tx: Tx, userId: string, options: SetupOptions): Promise<P
       entry.reason = 'The meal checklist supports six slots; review existing meals first.';
     }
   }
-  const rules: BlockRule[] = savedBlocks.map((row) => ({
-    ...row,
-    id: row.id,
-    status: row.status,
-    templateKey: row.templateKey,
-    goalId: row.goalId,
-    projectId: row.projectId,
-    taskId: row.taskId,
-  }));
-  const revisions: BlockRevision[] = savedRevisions.map((row) => ({ ...row }));
-  const exceptions: BlockException[] = savedExceptions.map((row) => ({ ...row }));
-  const conflictsWithSchedule = (
-    candidate: BlockRule,
-    allRules: BlockRule[],
-    datedRules: BlockRevision[],
-  ) =>
-    futureBoundaryDates(today, allRules, datedRules, exceptions).some((date) => {
-      const occurrences = expandBlocks(allRules, exceptions, date, date, datedRules);
-      return occurrences.some(
-        (current) =>
-          current.id === candidate.id &&
-          occurrences.some(
-            (other) =>
-              other.id !== candidate.id &&
-              other.occurrenceStatus !== 'skipped' &&
-              other.occurrenceStatus !== 'excused' &&
-              overlaps(other, current),
-          ),
-      );
+  if (chosen.has('nutrition')) {
+    const alreadyConfigured =
+      seeded.has('Nutrition checklist:enabled') ||
+      savedMeals.some((meal) => meal.templateKey?.startsWith('meal-'));
+    items.push({
+      section: 'nutrition',
+      type: 'Nutrition checklist',
+      key: 'enabled',
+      name: 'Show meal checklist on Today',
+      detail: 'The six meal slots can be planned in Settings and logged on Today.',
+      status: setting?.nutritionEnabled ? 'existing' : alreadyConfigured ? 'archived' : 'new',
+      reason:
+        !setting?.nutritionEnabled && alreadyConfigured
+          ? 'The checklist was previously set up and is paused; resume it in Settings if wanted.'
+          : undefined,
     });
-  const proposed = blocks
-    .filter((item) => chosen.has(item.section))
-    .map((item) => ({
-      ...item,
-      start:
-        item.key === 'lecture-mon'
-          ? options.mondayStart
-          : item.key === 'lecture-tue'
-            ? options.tuesdayStart
-            : item.start,
-      end:
-        item.key === 'lecture-mon'
-          ? options.mondayEnd
-          : item.key === 'lecture-tue'
-            ? options.tuesdayEnd
-            : item.end,
-    }));
-  const accepted: BlockRule[] = [];
-  for (const item of proposed) {
-    const existing = savedBlocks.find((row) => row.templateKey === item.key);
-    const description = `${item.mask
-      .split('')
-      .map((digit, index) =>
-        digit === '1' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index] : '',
-      )
-      .filter(Boolean)
-      .join(', ')} ${item.start}–${item.end}${item.fixed ? ' · fixed' : ''}`;
-    if (existing) {
-      add(item.section, 'Weekly block', item.key, item.name, description, existing, false);
-      const entry = items.at(-1)!;
-      const old = legacyRules[item.key];
-      const untouched =
-        old &&
-        existing.title === old.title &&
-        existing.weekdayMask === old.mask &&
-        existing.localStartTime === old.start &&
-        existing.localEndTime === old.end &&
-        existing.status === 'active' &&
-        !savedRevisions.some((revision) => revision.blockId === existing.id);
-      const changed =
-        existing.title !== item.name ||
-        existing.weekdayMask !== item.mask ||
-        existing.localStartTime !== item.start ||
-        existing.localEndTime !== item.end;
-      if (options.updateSchedule && entry.status === 'existing' && changed) {
-        if (untouched && !existing.isFixed) {
-          const revised: BlockRevision = {
-            blockId: existing.id,
-            effectiveDate: today,
-            title: item.name,
-            category: item.area,
-            localStartTime: item.start,
-            localEndTime: item.end,
-            weekdayMask: item.mask,
-            status: 'active',
-            isFixed: false,
-            endDate: existing.endDate,
-            taskId: existing.taskId,
-            goalId: existing.goalId,
-            projectId: existing.projectId,
-          };
-          const candidate: BlockRule = {
-            ...existing,
-            title: item.name,
-            category: item.area,
-            localStartTime: item.start,
-            localEndTime: item.end,
-            weekdayMask: item.mask,
-          };
-          if (conflictsWithSchedule(candidate, [...rules, ...accepted], [...revisions, revised])) {
-            entry.status = 'conflict';
-            entry.reason =
-              'Recommended change would overlap another session; current schedule is kept.';
-          } else {
-            entry.status = 'update';
-            entry.reason = `Future occurrences change from ${today}; earlier history stays intact.`;
-            revisions.push(revised);
-          }
-        } else
-          entry.reason =
-            'This managed schedule was customized or is fixed; its current rule is kept.';
-      }
-      continue;
-    }
-    const entry: PlanItem = {
-      section: item.section,
-      type: 'Weekly block',
-      key: item.key,
-      name: item.name,
-      detail: description,
-      status: 'new',
-    };
-    const candidate: BlockRule = {
-      id: `proposed:${item.key}`,
-      templateKey: item.key,
-      title: item.name,
-      category: item.area,
-      localStartTime: item.start,
-      localEndTime: item.end,
-      weekdayMask: item.mask,
-      startDate: today,
-      endDate: null,
-      isFixed: !!item.fixed,
-      status: 'active',
-    };
-    if (seeded.has(`Weekly block:${item.key}`)) {
-      entry.status = 'deleted';
-      entry.reason = 'Previously removed; this preset will not recreate it automatically.';
-    } else if (
-      savedBlocks.some(
-        (row) => !row.templateKey && row.title === item.name && row.weekdayMask === item.mask,
-      )
-    ) {
-      entry.status = 'duplicate';
-      entry.reason = 'Similar user-created session; review manually.';
-    } else {
-      if (conflictsWithSchedule(candidate, [...rules, ...accepted, candidate], revisions)) {
-        entry.status = 'conflict';
-        entry.reason =
-          'Overlaps an existing or proposed session. Adjust it in Week before installing.';
-      }
-    }
-    if (entry.status === 'new') accepted.push(candidate);
-    items.push(entry);
   }
   const dependencyAvailable = (type: string, key: string) => {
     const dependency = items.find((entry) => entry.type === type && entry.key === key);
-    return (
-      dependency?.status === 'new' ||
-      dependency?.status === 'existing' ||
-      dependency?.status === 'update'
-    );
+    return dependency?.status === 'new' || dependency?.status === 'existing';
   };
-  const blockByKey = new Map(blocks.map((item) => [item.key, item]));
   const projectByKey = new Map(projectPreset.map((item) => [item.key, item]));
   const taskByKey = new Map(taskPreset.map((item) => [item.key, item]));
   for (const entry of items) {
@@ -420,9 +232,8 @@ async function inspect(tx: Tx, userId: string, options: SetupOptions): Promise<P
       entry.type === 'Milestone' || entry.type === 'Starter task'
         ? taskByKey.get(entry.key)
         : undefined;
-    const block = entry.type === 'Weekly block' ? blockByKey.get(entry.key) : undefined;
-    const goalKey = project?.goal ?? task?.goal ?? block?.goal;
-    const projectKey = task?.project ?? block?.project;
+    const goalKey = project?.goal ?? task?.goal;
+    const projectKey = task?.project;
     if (
       (goalKey && !dependencyAvailable('Goal', goalKey)) ||
       (projectKey && !dependencyAvailable('Project', projectKey))
@@ -435,10 +246,21 @@ async function inspect(tx: Tx, userId: string, options: SetupOptions): Promise<P
     items,
     today,
     needsInput: [
-      'Replace Subject 1–5 with real names and set assessment dates when known.',
-      'Choose real foods, portions, preferred meal times and any meal macros.',
-      'Choose one travel or social day when known; no date is invented.',
-      'Add real grades, weight measurements, practice outcomes and applications only after they occur.',
+      ...(chosen.has('university')
+        ? ['Replace subject placeholders with real names and assessment dates when known.']
+        : []),
+      ...(taskPreset.some((task) => chosen.has(task.section))
+        ? ['Pick days for starter tasks in Week, then choose up to three priorities on Today.']
+        : []),
+      ...(chosen.has('nutrition')
+        ? ['Add your planned meal amounts in Settings and actual amounts on Today.']
+        : []),
+      ...(chosen.has('fitness')
+        ? ['Record measured weight on Today only after weighing yourself.']
+        : []),
+      ...(chosen.has('interview') || chosen.has('english') || chosen.has('career')
+        ? ['Record real practice outcomes or applications in Evidence only after they occur.']
+        : []),
     ],
   };
 }
@@ -450,14 +272,13 @@ export async function previewPersonalLifeOs(userId: string, options: SetupOption
 export async function installPersonalLifeOs(userId: string, options: SetupOptions) {
   return db.transaction(async (tx) => {
     await tx.execute(
-      sql`SELECT pg_advisory_xact_lock(hashtextextended(${`habitflow-schedule:${userId}`}, 0))`,
+      sql`SELECT pg_advisory_xact_lock(hashtextextended(${`habitflow-setup:${userId}`}, 0))`,
     );
     const plan = await inspect(tx, userId, options);
     const allowed = (type: string, key: string) =>
       plan.items.find((item) => item.type === type && item.key === key)?.status === 'new';
     const counts = {
       created: 0,
-      updated: 0,
       existing: plan.items.filter(
         (item) =>
           item.status === 'existing' || item.status === 'archived' || item.status === 'deleted',
@@ -484,10 +305,7 @@ export async function installPersonalLifeOs(userId: string, options: SetupOption
             templateKey: item.key,
             area: item.area,
             title: item.name,
-            description:
-              item.key === 'nutrition-reference'
-                ? `Approximately ${options.calories} kcal and ${options.protein} g protein daily are planning references, not consumed totals.`
-                : item.description,
+            description: item.description,
             targetValue: item.targetValue,
             targetUnit: item.targetUnit,
           })
@@ -620,94 +438,12 @@ export async function installPersonalLifeOs(userId: string, options: SetupOption
           .returning({ id: mealTemplates.id });
         if (row) counts.created++;
       }
-    for (const item of blocks.filter((item) => options.sections.includes(item.section))) {
-      if (
-        plan.items.find((entry) => entry.type === 'Weekly block' && entry.key === item.key)
-          ?.status === 'update'
-      ) {
-        const existing = (
-          await tx
-            .select()
-            .from(timeBlocks)
-            .where(and(eq(timeBlocks.userId, userId), eq(timeBlocks.templateKey, item.key)))
-            .limit(1)
-        )[0];
-        if (!existing)
-          throw new Error('A scheduled session changed while installing. Preview again.');
-        await tx.insert(timeBlockRevisions).values({
-          userId,
-          blockId: existing.id,
-          effectiveDate: plan.today,
-          title: item.name,
-          category: item.area,
-          localStartTime: item.start,
-          localEndTime: item.end,
-          weekdayMask: item.mask,
-          status: 'active',
-          endDate: existing.endDate,
-          isFixed: false,
-          goalId: existing.goalId,
-          projectId: existing.projectId,
-          taskId: existing.taskId,
-        });
-        counts.updated++;
-        continue;
-      }
-      if (!allowed('Weekly block', item.key)) continue;
-      const [row] = await tx
-        .insert(timeBlocks)
-        .values({
-          userId,
-          templateKey: item.key,
-          title: item.name,
-          category: item.area,
-          weekdayMask: item.mask,
-          localStartTime:
-            item.key === 'lecture-mon'
-              ? options.mondayStart
-              : item.key === 'lecture-tue'
-                ? options.tuesdayStart
-                : item.start,
-          localEndTime:
-            item.key === 'lecture-mon'
-              ? options.mondayEnd
-              : item.key === 'lecture-tue'
-                ? options.tuesdayEnd
-                : item.end,
-          startDate: plan.today,
-          isFixed: !!item.fixed,
-          goalId: item.goal ? goalIds.get(item.goal) : null,
-          projectId: item.project ? projectIds.get(item.project) : null,
-        })
-        .onConflictDoNothing()
-        .returning({ id: timeBlocks.id });
-      if (row) {
-        await tx.insert(timeBlockRevisions).values({
-          userId,
-          blockId: row.id,
-          effectiveDate: plan.today,
-          title: item.name,
-          category: item.area,
-          weekdayMask: item.mask,
-          localStartTime:
-            item.key === 'lecture-mon'
-              ? options.mondayStart
-              : item.key === 'lecture-tue'
-                ? options.tuesdayStart
-                : item.start,
-          localEndTime:
-            item.key === 'lecture-mon'
-              ? options.mondayEnd
-              : item.key === 'lecture-tue'
-                ? options.tuesdayEnd
-                : item.end,
-          status: 'active',
-          isFixed: !!item.fixed,
-          goalId: item.goal ? goalIds.get(item.goal) : null,
-          projectId: item.project ? projectIds.get(item.project) : null,
-        });
-        counts.created++;
-      }
+    if (allowed('Nutrition checklist', 'enabled')) {
+      await tx
+        .update(userSettings)
+        .set({ nutritionEnabled: true })
+        .where(eq(userSettings.userId, userId));
+      counts.created++;
     }
     if (counts.created !== plan.items.filter((item) => item.status === 'new').length)
       throw new Error(
@@ -768,15 +504,12 @@ export async function installPersonalLifeOs(userId: string, options: SetupOption
           .where(eq(mealTemplates.userId, userId))
       ).map((row) => row.key),
     );
-    collect(
-      'Weekly block',
-      (
-        await tx
-          .select({ key: timeBlocks.templateKey })
-          .from(timeBlocks)
-          .where(eq(timeBlocks.userId, userId))
-      ).map((row) => row.key),
-    );
+    const [settings] = await tx
+      .select({ nutritionEnabled: userSettings.nutritionEnabled })
+      .from(userSettings)
+      .where(eq(userSettings.userId, userId))
+      .limit(1);
+    if (settings?.nutritionEnabled) installed.add('Nutrition checklist:enabled');
     for (const item of plan.items)
       if (installed.has(`${item.type}:${item.key}`)) {
         await tx

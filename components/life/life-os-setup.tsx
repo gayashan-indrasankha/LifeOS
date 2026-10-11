@@ -8,15 +8,14 @@ import { sectionLabels } from '@/lib/life-os/preset';
 import type { Plan } from '@/lib/life-os/install';
 
 const sectionDetails: Record<keyof typeof sectionLabels, string> = {
-  university: 'Lecture windows, five editable subjects, study sessions and starter tasks.',
-  industry: 'Industry project, milestones and focused work sessions.',
+  university: 'An education goal, five editable subjects, starter tasks and a study habit.',
+  industry: 'A project goal and milestones you can assign to days in Week.',
   career: 'Software Engineering and DevOps goals, projects and milestones.',
-  interview: 'SE and DevOps topic checklist and practice sessions.',
-  english: 'Speaking practice, prompts and a weekly session.',
-  fitness: 'Four gym sessions, weight reminders and recovery.',
-  nutrition: 'Six optional meal slots and editable planning references.',
+  interview: 'SE and DevOps topic starters for recording real practice in Evidence.',
+  english: 'A speaking goal and habit; record actual practice in Evidence.',
+  fitness: 'A weight goal and gym and weigh-in habits; record measurements on Today.',
+  nutrition: 'Six blank meal slots to plan in Settings and log on Today.',
   recovery: 'Reading, meditation, sleep and attention routines.',
-  review: 'A light Sunday review session.',
 };
 
 export function LifeOsSetup() {
@@ -72,8 +71,12 @@ export function LifeOsSetup() {
         <h1 className="text-3xl font-bold tracking-tight">Set up my LifeOS</h1>
         <p className="text-sm font-semibold">Preset: Personal plan</p>
         <p className="text-sm text-muted-foreground">
-          Choose sections, review every proposed change, then confirm once. Existing and customized
-          records remain intact. Nothing is marked complete or logged as achieved.
+          Choose sections, preview the starter goals, tasks and habits, then install. Add real
+          dates, meals and measurements as you go. Existing and customized records remain intact.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Monthly insights builds from your recorded activity, so setup does not create a review or
+          any completed entries.
         </p>
       </header>
       <form
@@ -111,70 +114,6 @@ export function LifeOsSetup() {
               ),
             )}
           </div>
-          <h3 className="font-semibold">Starting references</h3>
-          <p className="text-sm text-muted-foreground">
-            These are editable planning values. Lecture times are defaults; enter your real times
-            before previewing. No travel time is assumed.
-          </p>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {(
-              [
-                ['mondayStart', 'Monday lecture start', '08:00'],
-                ['mondayEnd', 'Monday lecture end', '18:30'],
-                ['tuesdayStart', 'Tuesday lecture start', '08:00'],
-                ['tuesdayEnd', 'Tuesday lecture end', '15:00'],
-              ] as const
-            ).map(([name, label, value]) => (
-              <label key={name} className="text-sm">
-                {label}
-                <input
-                  className="mt-1 min-h-11 w-full rounded-lg border bg-background px-3"
-                  type="time"
-                  name={name}
-                  defaultValue={value}
-                  required
-                />
-              </label>
-            ))}
-            <label className="text-sm">
-              Daily calorie reference
-              <input
-                className="mt-1 min-h-11 w-full rounded-lg border bg-background px-3"
-                type="number"
-                name="calories"
-                defaultValue="3207"
-                min="1000"
-                max="6000"
-                required
-              />
-            </label>
-            <label className="text-sm">
-              Daily protein reference (g)
-              <input
-                className="mt-1 min-h-11 w-full rounded-lg border bg-background px-3"
-                type="number"
-                name="protein"
-                defaultValue="157"
-                min="20"
-                max="400"
-                required
-              />
-            </label>
-          </div>
-          <label className="flex items-start gap-3 rounded-xl border p-4 text-sm">
-            <input
-              type="checkbox"
-              name="updateSchedule"
-              value="yes"
-              className="mt-1 h-5 w-5 accent-primary"
-            />
-            <span>
-              <strong className="block">Apply recommended future schedule changes</strong>Only
-              unchanged, flexible sessions from the earlier personal plan qualify. Affected sessions
-              and conflicts appear in the preview. Earlier occurrences and customized schedules stay
-              intact. Fixed lectures are excluded.
-            </span>
-          </label>
           <button
             type="button"
             onClick={preview}
@@ -200,9 +139,6 @@ export function LifeOsSetup() {
             </div>
             <div className="flex flex-wrap gap-2 text-sm" aria-label="Preview counts">
               <span className="rounded-full bg-primary/10 px-3 py-1">{count('new')} new</span>
-              <span className="rounded-full bg-primary/10 px-3 py-1">
-                {count('update')} future schedule changes
-              </span>
               <span className="rounded-full bg-muted px-3 py-1">{count('existing')} existing</span>
               <span className="rounded-full bg-muted px-3 py-1">
                 {count('archived') + count('deleted')} archived or removed
@@ -259,9 +195,8 @@ export function LifeOsSetup() {
                 className="mt-1 h-5 w-5 accent-primary"
               />
               <span>
-                I reviewed this preview and want to add new items and apply any listed future
-                schedule changes in my selected sections. Existing, archived, removed, duplicate and
-                conflicting items will be kept as shown.
+                I reviewed this preview and want to add the new items in my selected sections.
+                Existing, archived, removed, duplicate and conflicting items will be kept as shown.
               </span>
             </label>
             <button
@@ -286,7 +221,8 @@ export function LifeOsSetup() {
             <h2 className="text-lg font-semibold">Your plan is ready to use</h2>
             <p>{state.success}</p>
             <p>
-              Start with Today: choose a priority, see your schedule, and record work as you go.
+              Start in Week by assigning starter tasks to days. On Today, choose priorities and
+              record habits, meals and weight as they happen.
             </p>
             <Link
               href="/today"
