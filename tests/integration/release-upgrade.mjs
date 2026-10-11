@@ -16,7 +16,7 @@ const fullJournal = JSON.parse(await readFile(join(folder, 'meta', '_journal.jso
 const files = await readdir(folder);
 assert.equal(
   fullJournal.entries.length,
-  22,
+  24,
   'Review the fixture boundaries when migrations change.',
 );
 for (const [index, entry] of fullJournal.entries.entries()) {
