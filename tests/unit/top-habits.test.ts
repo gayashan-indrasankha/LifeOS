@@ -34,11 +34,13 @@ describe('top fixed-schedule habits', () => {
       new Date(2026, 9, 9),
       1,
     );
-    expect(ranked).toMatchObject([{
-      habit: { name: 'eat' },
-      completed: 1,
-      total: 2,
-      rate: 50,
-    }]);
+    expect(ranked).toMatchObject([
+      {
+        habit: { name: 'eat' },
+        completed: 1,
+        total: 2,
+        rate: 50,
+      },
+    ]);
   });
 });

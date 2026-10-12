@@ -115,19 +115,18 @@ export function scheduleStats(
   // Month percentages are defined only for fixed occurrences. A calendar month
   // cuts flexible weeks in half, so weekly quota attainment is shown separately.
   void startsOn;
-  const eligible = days.filter(
-    (day) => {
-      if (day.date > cutoff) return false;
-      if (isFixedOccurrence(habit, day.date, day.dayOfWeek)) return true;
-      // A legacy check-in can predate the first recorded schedule revision.
-      // Credit that recorded day without assuming any missed obligations nearby.
-      if (!completedDates.has(day.date) || !habit.scheduleRevisions?.length) return false;
-      if (habitRuleOn(habit, day.date) || isFlexibleWeekly(habit.schedule)) return false;
-      const firstRule = habit.scheduleRevisions.reduce((first, rule) =>
-        rule.effectiveDate < first.effectiveDate ? rule : first);
-      return inHabitRange(firstRule, day.date);
-    },
-  );
+  const eligible = days.filter((day) => {
+    if (day.date > cutoff) return false;
+    if (isFixedOccurrence(habit, day.date, day.dayOfWeek)) return true;
+    // A legacy check-in can predate the first recorded schedule revision.
+    // Credit that recorded day without assuming any missed obligations nearby.
+    if (!completedDates.has(day.date) || !habit.scheduleRevisions?.length) return false;
+    if (habitRuleOn(habit, day.date) || isFlexibleWeekly(habit.schedule)) return false;
+    const firstRule = habit.scheduleRevisions.reduce((first, rule) =>
+      rule.effectiveDate < first.effectiveDate ? rule : first,
+    );
+    return inHabitRange(firstRule, day.date);
+  });
   return {
     total: eligible.length,
     completed: eligible.filter((day) => completedDates.has(day.date)).length,

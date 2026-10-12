@@ -45,22 +45,30 @@ test('Home dashboard stays usable from small phones through desktop', async ({ p
         progress && scrollBox && progress.x + progress.width <= scrollBox.x + scrollBox.width + 1,
       ).toBeTruthy();
       const todayHeader = page.locator('thead th[data-habit-date][class*="sm:bg-primary/10"]');
-      await expect.poll(async () => {
-        const todayBox = await todayHeader.boundingBox();
-        return !!(todayBox && progress && scrollBox
-          && todayBox.x >= progress.x + progress.width - 1
-          && todayBox.x + todayBox.width <= scrollBox.x + scrollBox.width + 1);
-      }).toBeTruthy();
+      await expect
+        .poll(async () => {
+          const todayBox = await todayHeader.boundingBox();
+          return !!(
+            todayBox &&
+            progress &&
+            scrollBox &&
+            todayBox.x >= progress.x + progress.width - 1 &&
+            todayBox.x + todayBox.width <= scrollBox.x + scrollBox.width + 1
+          );
+        })
+        .toBeTruthy();
       const fixedBefore = await Promise.all(
-        ['Habit', 'Goal', 'Progress'].map(async (name) =>
-          (await page.getByRole('columnheader', { name }).boundingBox())?.x),
+        ['Habit', 'Goal', 'Progress'].map(
+          async (name) => (await page.getByRole('columnheader', { name }).boundingBox())?.x,
+        ),
       );
       await tracker.evaluate((element) => {
         element.scrollLeft += 200;
       });
       const fixedAfter = await Promise.all(
-        ['Habit', 'Goal', 'Progress'].map(async (name) =>
-          (await page.getByRole('columnheader', { name }).boundingBox())?.x),
+        ['Habit', 'Goal', 'Progress'].map(
+          async (name) => (await page.getByRole('columnheader', { name }).boundingBox())?.x,
+        ),
       );
       fixedAfter.forEach((x, index) => expect(x).toBeCloseTo(fixedBefore[index]!, 0));
       const cards = page.locator('section[aria-label="Habit analytics"] .analytics-card');

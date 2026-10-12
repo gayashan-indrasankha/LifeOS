@@ -63,7 +63,10 @@ export default async function WeekPage({
             {fullDateLabel(start)} – {fullDateLabel(end)}
           </p>
         </div>
-        <nav aria-label="Weeks" className="android-week-nav grid grid-cols-3 gap-2 text-sm sm:flex sm:flex-wrap">
+        <nav
+          aria-label="Weeks"
+          className="android-week-nav grid grid-cols-3 gap-2 text-sm sm:flex sm:flex-wrap"
+        >
           <Link
             href={`/week?date=${addCalendarDays(start, -7)}`}
             className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border bg-card px-3 py-2 font-medium transition-colors hover:border-primary/40 hover:bg-primary/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"

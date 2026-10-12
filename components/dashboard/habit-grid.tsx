@@ -74,14 +74,17 @@ export function HabitGrid({
         '--habit-day-width',
         `${Math.max(44, scrollArea.clientWidth - fixedWidth)}px`,
       );
-      const dayHeader = Array.from(scrollArea.querySelectorAll<HTMLElement>('[data-habit-date]'))
-        .find((header) => header.dataset.habitDate === currentDay);
+      const dayHeader = Array.from(
+        scrollArea.querySelectorAll<HTMLElement>('[data-habit-date]'),
+      ).find((header) => header.dataset.habitDate === currentDay);
       if (!dayHeader) {
         scrollArea.scrollLeft = 0;
         return;
       }
-      const dayLeft = dayHeader.getBoundingClientRect().left
-        - scrollArea.getBoundingClientRect().left + scrollArea.scrollLeft;
+      const dayLeft =
+        dayHeader.getBoundingClientRect().left -
+        scrollArea.getBoundingClientRect().left +
+        scrollArea.scrollLeft;
       scrollArea.scrollLeft = dayLeft - fixedWidth;
     };
 
