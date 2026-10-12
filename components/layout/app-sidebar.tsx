@@ -58,6 +58,11 @@ export function MobileNav() {
         <Link
           key={item.href}
           href={item.href}
+          prefetch={
+            item.href === '/dashboard' || item.href === '/today' || item.href === '/week'
+              ? true
+              : undefined
+          }
           aria-current={isActivePath(pathname, item.href) ? 'page' : undefined}
           className={cn(
             'flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary',
@@ -96,6 +101,11 @@ export function AppSidebar({ user }: AppSidebarProps) {
             <Link
               key={item.name}
               href={item.href}
+              prefetch={
+                item.href === '/dashboard' || item.href === '/today' || item.href === '/week'
+                  ? true
+                  : undefined
+              }
               aria-current={isActive ? 'page' : undefined}
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',

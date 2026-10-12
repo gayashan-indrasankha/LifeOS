@@ -70,39 +70,48 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const chartWeekStart = weekStart(streakCutoff, settings.weekStartsOn);
   const eightWeekStart = addCalendarDays(chartWeekStart, -49);
   const weightSince = addCalendarDays(todayStr, -29);
-  const [allHabits, entries, weeklyEntries, todayNote, goals, recentWeights, latestWeight] =
-    await Promise.all([
-      getHistoricalHabitsByUser(userId),
-      getEntriesByUserAndDateRange(userId, expandedStart, expandedEnd),
-      getEntriesByUserAndDateRange(userId, eightWeekStart, streakCutoff),
-      getNoteByUserAndDate(userId, todayStr),
-      getGoals(userId),
-      db
-        .select({ date: metricEntries.date, value: metricEntries.value })
-        .from(metricEntries)
-        .where(
-          and(
-            eq(metricEntries.userId, userId),
-            eq(metricEntries.type, 'Body weight'),
-            eq(metricEntries.unit, 'kg'),
-            gte(metricEntries.date, weightSince),
-            lte(metricEntries.date, todayStr),
-          ),
+  const [
+    allHabits,
+    entries,
+    weeklyEntries,
+    todayNote,
+    goals,
+    recentWeights,
+    latestWeight,
+    streakEntries,
+  ] = await Promise.all([
+    getHistoricalHabitsByUser(userId),
+    getEntriesByUserAndDateRange(userId, expandedStart, expandedEnd),
+    getEntriesByUserAndDateRange(userId, eightWeekStart, streakCutoff),
+    getNoteByUserAndDate(userId, todayStr),
+    getGoals(userId),
+    db
+      .select({ date: metricEntries.date, value: metricEntries.value })
+      .from(metricEntries)
+      .where(
+        and(
+          eq(metricEntries.userId, userId),
+          eq(metricEntries.type, 'Body weight'),
+          eq(metricEntries.unit, 'kg'),
+          gte(metricEntries.date, weightSince),
+          lte(metricEntries.date, todayStr),
         ),
-      db
-        .select({ date: metricEntries.date, value: metricEntries.value })
-        .from(metricEntries)
-        .where(
-          and(
-            eq(metricEntries.userId, userId),
-            eq(metricEntries.type, 'Body weight'),
-            eq(metricEntries.unit, 'kg'),
-            lte(metricEntries.date, todayStr),
-          ),
-        )
-        .orderBy(desc(metricEntries.date), desc(metricEntries.createdAt))
-        .limit(1),
-    ]);
+      ),
+    db
+      .select({ date: metricEntries.date, value: metricEntries.value })
+      .from(metricEntries)
+      .where(
+        and(
+          eq(metricEntries.userId, userId),
+          eq(metricEntries.type, 'Body weight'),
+          eq(metricEntries.unit, 'kg'),
+          lte(metricEntries.date, todayStr),
+        ),
+      )
+      .orderBy(desc(metricEntries.date), desc(metricEntries.createdAt))
+      .limit(1),
+    getActiveHabitCompletionsThrough(userId, streakCutoff),
+  ]);
   const weightPoints = weightTrend(recentWeights, settings.weekStartsOn, null).daily;
   const fitnessGoal = goals.find(
     (goal) =>
@@ -116,8 +125,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           entry.habitId === habit.id && calendarDays.some((day) => day.date === entry.date),
       ),
   );
-
-  const streakEntries = await getActiveHabitCompletionsThrough(userId, streakCutoff);
 
   const stats = calculateCompletionRate(habits, entries, daysInMonth, today);
   const streaks = calculateStreaks(streakEntries, streakCutoff);
