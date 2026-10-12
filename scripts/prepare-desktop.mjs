@@ -1,9 +1,13 @@
 import { cp, mkdir, rm, realpath, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { createRequire } from 'node:module';
+import { verifyCloudOrigin } from './verify-cloud-origin.mjs';
 
 const require = createRequire(import.meta.url);
 const root = process.cwd();
+const cloudOrigin = process.env.LIFEOS_CLOUD_URL
+  ? await verifyCloudOrigin(process.env.LIFEOS_CLOUD_URL)
+  : null;
 const stage = path.resolve(root, 'desktop-stage');
 if (!stage.startsWith(root + path.sep))
   throw new Error('Desktop stage must be inside the repository.');
@@ -22,6 +26,12 @@ await cp('public', '.next/standalone/public', { recursive: true, force: true });
 await mkdir(path.join(stage, 'node_modules', '@electric-sql'), { recursive: true });
 await mkdir(path.join(stage, 'lib', 'db'), { recursive: true });
 await cp('desktop', path.join(stage, 'desktop'), { recursive: true });
+if (cloudOrigin) {
+  await writeFile(
+    path.join(stage, 'desktop', 'cloud-config.cjs'),
+    `exports.cloudOrigin = ${JSON.stringify(cloudOrigin)};\n`,
+  );
+}
 await cp('lib/db/migrations', path.join(stage, 'lib', 'db', 'migrations'), { recursive: true });
 await cp('.next/standalone', path.join(stage, '.next', 'standalone'), { recursive: true });
 const manifest = require('../package.json');

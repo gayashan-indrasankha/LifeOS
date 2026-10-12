@@ -1,6 +1,6 @@
 # LifeOS for Windows
 
-LifeOS is packaged as a Windows installer. Download `LifeOS Setup <version>.exe` from the **LifeOS-Windows-Installer** artifact of a successful [Windows desktop installer](.github/workflows/desktop-check.yml) workflow run, or build it from source. The installed app runs without Docker, PostgreSQL, Node.js, or an internet connection on the destination PC.
+LifeOS is packaged as a Windows installer. Download `LifeOS Setup <version>.exe` from the **LifeOS-Windows-Installer** artifact of a successful [Windows desktop installer](.github/workflows/desktop-check.yml) workflow run, or build it from source. A package built with `LIFEOS_CLOUD_URL=https://your-lifeos-site.example` opens the shared hosted app and requires internet. A package built without that variable retains the original offline behavior. See [CLOUD.md](CLOUD.md) for deployment and migration.
 
 To build it in GitHub, open **Actions → Windows desktop installer → Run workflow** and select the branch. When the run finishes, open its summary, download **LifeOS-Windows-Installer** under **Artifacts**, and extract the setup executable from the ZIP.
 
