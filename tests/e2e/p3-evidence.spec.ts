@@ -68,7 +68,9 @@ test('interview, English, and weight practice can be managed on mobile', async (
   await editInterview.locator('[name="topic"]').fill('SQL joins');
   await editInterview.locator('[name="durationMinutes"]').fill('30');
   await editInterview.getByRole('button', { name: 'Save changes' }).click();
-  await expect(interviewRecord).toContainText('SQL joins');
+  await expect(page.locator('#interviews article').filter({ hasText: 'SQL joins' })).toContainText(
+    '30 min',
+  );
   await page.reload();
   await expect(page.locator('#interviews article').filter({ hasText: 'SQL joins' })).toContainText(
     '30 min',
@@ -114,7 +116,9 @@ test('interview, English, and weight practice can be managed on mobile', async (
   await editEnglish.locator('[name="topic"]').fill('Explain REST APIs');
   await editEnglish.locator('[name="durationMinutes"]').fill('15');
   await editEnglish.getByRole('button', { name: 'Save changes' }).click();
-  await expect(englishRecord).toContainText('Explain REST APIs');
+  await expect(
+    page.locator('#english article').filter({ hasText: 'Explain REST APIs' }),
+  ).toContainText('15 min');
   await page.reload();
   await expect(
     page.locator('#english article').filter({ hasText: 'Explain REST APIs' }),
