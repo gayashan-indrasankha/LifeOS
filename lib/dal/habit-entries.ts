@@ -66,9 +66,15 @@ export async function getActiveHabitCompletionsThrough(userId: string, cutoff: s
       ),
     db.select().from(habitScheduleRevisions).where(eq(habitScheduleRevisions.userId, userId)),
   ]);
+  const revisionsByHabit = new Map<string, typeof revisions>();
+  for (const revision of revisions) {
+    const group = revisionsByHabit.get(revision.habitId) ?? [];
+    group.push(revision);
+    revisionsByHabit.set(revision.habitId, group);
+  }
   return entries.map((entry) => ({
     ...entry,
-    scheduleRevisions: revisions.filter((revision) => revision.habitId === entry.habitId),
+    scheduleRevisions: revisionsByHabit.get(entry.habitId) ?? [],
   }));
 }
 

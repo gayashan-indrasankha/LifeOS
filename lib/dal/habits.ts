@@ -17,9 +17,15 @@ async function withRevisions(userId: string, activeOnly: boolean) {
       .orderBy(asc(habits.sortOrder), asc(habits.createdAt)),
     db.select().from(habitScheduleRevisions).where(eq(habitScheduleRevisions.userId, userId)),
   ]);
+  const revisionsByHabit = new Map<string, typeof revisions>();
+  for (const revision of revisions) {
+    const group = revisionsByHabit.get(revision.habitId) ?? [];
+    group.push(revision);
+    revisionsByHabit.set(revision.habitId, group);
+  }
   return rows.map((habit) => ({
     ...habit,
-    scheduleRevisions: revisions.filter((revision) => revision.habitId === habit.id),
+    scheduleRevisions: revisionsByHabit.get(habit.id) ?? [],
   }));
 }
 
