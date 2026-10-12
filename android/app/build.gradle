@@ -12,6 +12,20 @@ android {
         targetSdk 35
         versionCode 1
         versionName '0.1.0'
+        def cloudUrl = System.getenv('LIFEOS_CLOUD_URL') ?: ''
+        if (cloudUrl) {
+            def parsed = new URI(cloudUrl)
+            if (parsed.scheme != 'https' || !parsed.host || parsed.userInfo ||
+                (parsed.rawPath != '' && parsed.rawPath != '/') || parsed.rawQuery || parsed.rawFragment) {
+                throw new GradleException('LIFEOS_CLOUD_URL must be an HTTPS origin without a path.')
+            }
+            cloudUrl = parsed.scheme + '://' + parsed.authority
+        }
+        buildConfigField 'String', 'LIFEOS_CLOUD_URL', "\"${cloudUrl}\""
+    }
+
+    buildFeatures {
+        buildConfig true
     }
 
     sourceSets {

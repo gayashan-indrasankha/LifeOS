@@ -1,6 +1,7 @@
 package com.lifeos.app;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -17,6 +18,7 @@ import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceError;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
@@ -45,6 +47,7 @@ public class MainActivity extends Activity {
     private String origin;
     private String downloadUrl;
     private ValueCallback<Uri[]> uploadCallback;
+    private boolean mainFrameFailed;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +82,11 @@ public class MainActivity extends Activity {
         CookieManager.getInstance().setAcceptCookie(true);
         webView.setWebViewClient(new WebViewClient() {
             @Override
+            public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
+                mainFrameFailed = false;
+            }
+
+            @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
                 if (origin != null && (url.equals(origin) || url.startsWith(origin + "/"))) {
@@ -92,7 +100,9 @@ public class MainActivity extends Activity {
 
             @Override
             public void onPageFinished(WebView view, String url) {
-                if (origin == null || !(url.equals(origin) || url.startsWith(origin + "/"))) return;
+                if (mainFrameFailed || origin == null ||
+                    !(url.equals(origin) || url.startsWith(origin + "/"))) return;
+                status.setVisibility(View.GONE);
                 view.evaluateJavascript("(() => {"
                     + "const sync = () => LifeOSAndroidSystemBars.setDarkMode("
                     + "document.documentElement.classList.contains('dark'));"
@@ -100,6 +110,15 @@ public class MainActivity extends Activity {
                     + "new MutationObserver(sync).observe(document.documentElement,"
                     + "{attributes:true,attributeFilter:['class']});"
                     + "})()", null);
+            }
+
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request,
+                                        WebResourceError error) {
+                if (!request.isForMainFrame()) return;
+                mainFrameFailed = true;
+                status.setText("LifeOS could not connect. Check your internet connection.\n\nTap to retry.");
+                status.setVisibility(View.VISIBLE);
             }
         });
         webView.setWebChromeClient(new WebChromeClient() {
@@ -137,7 +156,40 @@ public class MainActivity extends Activity {
         frame.addView(status, new FrameLayout.LayoutParams(-1, -1));
         setContentView(frame);
         frame.post(() -> updateSystemBars(dark));
-        new Thread(this::startLocalApp, "lifeos-startup").start();
+        status.setOnClickListener(view -> {
+            if (!BuildConfig.LIFEOS_CLOUD_URL.isEmpty()
+                && BuildConfig.LIFEOS_CLOUD_URL.equals(origin)) {
+                status.setText("Connecting to LifeOS…");
+                webView.loadUrl(origin);
+            }
+        });
+        chooseAppMode();
+    }
+
+    private void chooseAppMode() {
+        if (BuildConfig.LIFEOS_CLOUD_URL.isEmpty()) {
+            new Thread(this::startLocalApp, "lifeos-startup").start();
+            return;
+        }
+        File localDatabase = new File(new File(getFilesDir(), "data"), "database");
+        if (!localDatabase.exists()) {
+            openCloudApp();
+            return;
+        }
+        new AlertDialog.Builder(this)
+            .setTitle("Move LifeOS data online")
+            .setMessage("This phone has LifeOS data stored locally. Open the local app to export a JSON backup, then sign in online and restore it there. Your local data will stay on this phone.")
+            .setPositiveButton("Open local data", (dialog, which) ->
+                new Thread(this::startLocalApp, "lifeos-startup").start())
+            .setNeutralButton("Open online LifeOS", (dialog, which) -> openCloudApp())
+            .setNegativeButton("Cancel", (dialog, which) -> finish())
+            .show();
+    }
+
+    private void openCloudApp() {
+        origin = BuildConfig.LIFEOS_CLOUD_URL;
+        status.setText("Connecting to LifeOS…");
+        webView.loadUrl(origin);
     }
 
     private void updateSystemBars(boolean dark) {
@@ -173,7 +225,7 @@ public class MainActivity extends Activity {
             builder.environment().put("TMPDIR", getCacheDir().getAbsolutePath());
             server = builder.start();
             captureServerLog(server, new File(dataDir, "server.log"));
-            for (int attempt = 0; attempt < 120; attempt++) {
+            for (int attempt = 0; attempt < 240; attempt++) {
                 if (!server.isAlive()) throw new IOException("LifeOS stopped during startup. Check server.log.");
                 HttpURLConnection connection = null;
                 try {

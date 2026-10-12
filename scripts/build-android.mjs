@@ -3,8 +3,12 @@ import { copyFile, mkdir, readFile, stat } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
+import { verifyCloudOrigin } from './verify-cloud-origin.mjs';
 
 const root = process.cwd();
+if (process.env.LIFEOS_CLOUD_URL) {
+  await verifyCloudOrigin(process.env.LIFEOS_CLOUD_URL);
+}
 const sdk = process.env.ANDROID_HOME || path.join(root, '.android-toolchain', 'sdk');
 const runtime =
   process.env.LIFEOS_ANDROID_NODE_BINARY ||

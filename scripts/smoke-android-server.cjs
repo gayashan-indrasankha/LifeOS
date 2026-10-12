@@ -3,6 +3,7 @@ const { mkdtempSync, rmSync } = require('node:fs');
 const { tmpdir } = require('node:os');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const { gzipSync } = require('node:zlib');
 const { freeLoopbackPort } = require('../desktop/runtime.cjs');
 
 const root = path.resolve('android-stage');
@@ -26,7 +27,7 @@ async function start(port) {
     });
   }
   const origin = `http://127.0.0.1:${port}`;
-  for (let attempt = 0; attempt < 120; attempt++) {
+  for (let attempt = 0; attempt < 240; attempt++) {
     if (child.exitCode !== null) throw new Error(`Android launcher exited:\n${output}`);
     try {
       const response = await fetch(`${origin}/api/health`, {
@@ -71,8 +72,45 @@ async function main() {
     const dashboard = await fetch(`${first.origin}/dashboard`, { headers: { Cookie: cookie } });
     if (!dashboard.ok) throw new Error(`Dashboard failed: HTTP ${dashboard.status}`);
     const backup = await fetch(`${first.origin}/api/export`, { headers: { Cookie: cookie } });
-    if (!backup.ok || (await backup.json()).schemaVersion !== 2) {
+    const data = await backup.json();
+    if (!backup.ok || data.schemaVersion !== 2) {
       throw new Error('Backup export failed.');
+    }
+    const noteId = crypto.randomUUID();
+    data.dailyNotes.push({
+      id: noteId,
+      date: '2026-10-12',
+      content: 'Cloud migration smoke note',
+      createdAt: '2026-10-12T00:00:00.000Z',
+      updatedAt: '2026-10-12T00:00:00.000Z',
+    });
+    const merge = (payload, compressed = false) =>
+      fetch(`${first.origin}/api/import/merge`, {
+        method: 'POST',
+        headers: {
+          Cookie: cookie,
+          Origin: first.origin,
+          'Content-Type': compressed ? 'application/gzip' : 'application/json',
+        },
+        body: compressed ? gzipSync(JSON.stringify(payload)) : JSON.stringify(payload),
+      });
+    const firstMerge = await merge(data);
+    if (!firstMerge.ok || (await firstMerge.json()).added !== 1) {
+      throw new Error(`Safe migration failed: HTTP ${firstMerge.status}`);
+    }
+    const repeatedMerge = await merge(data, true);
+    if (!repeatedMerge.ok || (await repeatedMerge.json()).alreadyPresent < 1) {
+      throw new Error('Repeating a migration was not idempotent.');
+    }
+    data.dailyNotes[0].content = 'Conflicting note';
+    const conflict = await merge(data);
+    if (conflict.status !== 409) throw new Error('A conflicting migration was not rejected.');
+    const verified = await fetch(`${first.origin}/api/export`, { headers: { Cookie: cookie } });
+    const after = await verified.json();
+    if (
+      after.dailyNotes.find((note) => note.id === noteId)?.content !== 'Cloud migration smoke note'
+    ) {
+      throw new Error('A rejected migration changed existing data.');
     }
     await stop(child);
     child = undefined;

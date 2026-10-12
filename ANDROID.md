@@ -1,4 +1,6 @@
-# LifeOS for Android (offline)
+# LifeOS for Android
+
+Set `LIFEOS_CLOUD_URL` to the deployed HTTPS LifeOS origin when building the shared-cloud APK. It opens the same account and database as the web and Windows apps. An existing installation with local data can still open its embedded local app to export a JSON backup before switching online. See [CLOUD.md](CLOUD.md). The details below describe the retained local runtime and offline test build used when `LIFEOS_CLOUD_URL` is unset.
 
 The Android package embeds the existing Next.js standalone server and PGlite database. It runs on the phone's loopback interface and displays LifeOS in a WebView. No remote server is needed after installation. The app uses its private storage for its account, sessions, and productivity data. The Android database is separate from the Windows database. Use **Settings → Export my data** on Windows, then create a local account in the Android app and use **Settings → Restore from a backup** to transfer productivity data. The backup does not include account credentials.
 
