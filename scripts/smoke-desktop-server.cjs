@@ -49,6 +49,7 @@ async function main() {
         HOSTNAME: '127.0.0.1',
         PORT: String(port),
         DATABASE_URL: database.url,
+        HABITFLOW_EMBEDDED_DB: '1',
         BETTER_AUTH_URL: origin,
         NEXT_PUBLIC_APP_URL: origin,
         BETTER_AUTH_SECRET: crypto.randomBytes(48).toString('base64url'),
