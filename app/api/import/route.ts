@@ -1,10 +1,9 @@
 import { eq } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/session';
-import { BackupFormatError, backupTables, parseBackup } from '@/lib/backup/format';
+import { backupTables } from '@/lib/backup/format';
+import { BackupRequestError, readBackupRequest } from '@/lib/backup/request';
 import { db } from '@/lib/db';
 import { habits } from '@/lib/db/schema';
-
-const MAX_BACKUP_BYTES = 25 * 1024 * 1024;
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
@@ -22,7 +21,8 @@ export async function POST(request: Request) {
     let sameOrigin = false;
     try {
       const source = new URL(origin);
-      const protocol = request.headers.get('x-forwarded-proto') ?? new URL(request.url).protocol.slice(0, -1);
+      const protocol =
+        request.headers.get('x-forwarded-proto') ?? new URL(request.url).protocol.slice(0, -1);
       sameOrigin = source.protocol === `${protocol}:` && allowedHosts.includes(source.host);
     } catch {
       // A null or malformed Origin must not authorize a data replacement.
@@ -31,30 +31,18 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Import must come from this app.' }, { status: 403 });
     }
   }
-  if (!request.headers.get('content-type')?.startsWith('application/json')) {
-    return Response.json({ error: 'Choose a LifeOS JSON backup file.' }, { status: 415 });
-  }
-  const declaredSize = Number(request.headers.get('content-length'));
-  if (declaredSize > MAX_BACKUP_BYTES) {
-    return Response.json({ error: 'The backup exceeds the 25 MB limit.' }, { status: 413 });
-  }
-
   let backup;
   try {
-    const body = await request.text();
-    if (Buffer.byteLength(body, 'utf8') > MAX_BACKUP_BYTES) {
-      return Response.json({ error: 'The backup exceeds the 25 MB limit.' }, { status: 413 });
-    }
-    backup = parseBackup(JSON.parse(body));
+    backup = await readBackupRequest(request);
   } catch (error) {
     return Response.json(
       {
         error:
-          error instanceof BackupFormatError
+          error instanceof BackupRequestError
             ? error.message
             : 'This is not a valid LifeOS JSON backup.',
       },
-      { status: 400 },
+      { status: error instanceof BackupRequestError ? error.status : 400 },
     );
   }
 

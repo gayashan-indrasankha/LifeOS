@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AlertTriangle, CheckCircle2, FileJson2, Loader2, Upload } from 'lucide-react';
 
 const MAX_BACKUP_BYTES = 25 * 1024 * 1024;
+const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
 
 export function BackupImport() {
   const router = useRouter();
@@ -46,19 +47,47 @@ export function BackupImport() {
     }
   }
 
-  async function importFile() {
+  async function importFile(mode: 'merge' | 'replace') {
     if (!file || busy) return;
     setBusy(true);
     setError(null);
     try {
-      const response = await fetch('/api/import', {
+      let body: Blob = file;
+      let contentType = 'application/json';
+      if (file.size > MAX_UPLOAD_BYTES) {
+        if (typeof CompressionStream === 'undefined') {
+          throw new Error('This device cannot compress a large backup for upload.');
+        }
+        body = await new Response(file.stream().pipeThrough(new CompressionStream('gzip'))).blob();
+        contentType = 'application/gzip';
+        if (body.size > MAX_UPLOAD_BYTES) {
+          if (window.location.protocol === 'http:') {
+            body = file;
+            contentType = 'application/json';
+          } else {
+            throw new Error(
+              'This backup is still too large for the cloud upload limit. Your data was not changed.',
+            );
+          }
+        }
+      }
+      const response = await fetch(mode === 'merge' ? '/api/import/merge' : '/api/import', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: file,
+        headers: { 'Content-Type': contentType },
+        body,
       });
-      const result = (await response.json()) as { error?: string; importedRecords?: number };
+      const result = (await response.json()) as {
+        error?: string;
+        importedRecords?: number;
+        added?: number;
+        alreadyPresent?: number;
+      };
       if (!response.ok) throw new Error(result.error || 'Import failed.');
-      setSuccess(`Restored ${result.importedRecords} records. Your data is ready to use.`);
+      setSuccess(
+        mode === 'merge'
+          ? `Added ${result.added} records. ${result.alreadyPresent} matching records were already here.`
+          : `Restored ${result.importedRecords} records. Your data is ready to use.`,
+      );
       setFile(null);
       setSummary(null);
       router.refresh();
@@ -133,15 +162,31 @@ export function BackupImport() {
               Cancel
             </button>
           </div>
-          <div className="mt-4 flex items-start gap-2 border-t border-amber-300/70 pt-4 dark:border-amber-700/70">
+          <div className="mt-4 border-t border-amber-300/70 pt-4 dark:border-amber-700/70">
+            <p className="font-semibold">Add records safely</p>
+            <p className="mt-1 leading-relaxed opacity-85">
+              Use this when moving data from a device. Matching records are skipped. If any record
+              conflicts, nothing is imported and your account stays unchanged.
+            </p>
+            <button
+              type="button"
+              onClick={() => void importFile('merge')}
+              disabled={busy}
+              className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 sm:w-auto"
+            >
+              {busy && <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />}
+              Add without replacing
+            </button>
+          </div>
+          <div className="mt-5 flex items-start gap-2 border-t border-amber-300/70 pt-4 dark:border-amber-700/70">
             <AlertTriangle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
             <div>
               <p className="font-semibold">This will replace your current LifeOS data</p>
               <p className="mt-1 leading-relaxed opacity-85">
                 <span className="android-standard-copy">
-                  Habits, check-ins, meals, plans, settings, notes and reviews will be replaced. Your
-                  sign-in stays the same. Download a backup of this device first if you need to keep
-                  its data.
+                  Habits, check-ins, meals, plans, settings, notes and reviews will be replaced.
+                  Your sign-in stays the same. Download a backup of this device first if you need to
+                  keep its data.
                 </span>
                 <span className="android-mobile-copy">
                   Restoring replaces this device’s habits, check-ins, meals, plans, settings, notes
@@ -153,9 +198,9 @@ export function BackupImport() {
           </div>
           <button
             type="button"
-            onClick={() => void importFile()}
+            onClick={() => void importFile('replace')}
             disabled={busy}
-            className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 sm:w-auto"
+            className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-amber-400 bg-background px-4 font-semibold text-amber-950 transition-colors hover:bg-amber-100 disabled:opacity-50 dark:text-amber-100 dark:hover:bg-amber-900/40 sm:w-auto"
           >
             {busy && <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />}
             {busy ? 'Restoring backup…' : 'Replace data and restore'}

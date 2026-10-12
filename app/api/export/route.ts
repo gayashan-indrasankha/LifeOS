@@ -29,7 +29,19 @@ export async function GET() {
     exportedAt: new Date().toISOString(),
     ...Object.fromEntries(sections),
   };
-  return new Response(JSON.stringify(data, null, 2), {
+  const bytes = new TextEncoder().encode(JSON.stringify(data, null, 2));
+  let offset = 0;
+  const body = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      if (offset >= bytes.length) {
+        controller.close();
+        return;
+      }
+      controller.enqueue(bytes.subarray(offset, offset + 64 * 1024));
+      offset += 64 * 1024;
+    },
+  });
+  return new Response(body, {
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
       'Content-Disposition': `attachment; filename="lifeos-backup-${new Date().toISOString().slice(0, 10)}.json"`,
