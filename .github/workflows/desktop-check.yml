@@ -54,12 +54,19 @@ jobs:
           if (-not (Test-Path -LiteralPath desktop-stage/lib/db/migrations/meta/_journal.json)) { throw 'Migration journal missing from staged bundle' }
           if (-not (Test-Path -LiteralPath desktop-stage/.next/standalone/server.js)) { throw 'Standalone server missing from staged bundle' }
           Write-Output "Installer: $($installer.Name), $($installer.Length) bytes"
+      - name: Packaged Electron UI and restart persistence
+        shell: pwsh
+        run: node tests/desktop/portable.mjs
+      - name: Prepare cloud-connected installer
+        shell: pwsh
+        env:
+          LIFEOS_CLOUD_URL: https://lifeos-gayashan-2026.vercel.app
+        run: npm run desktop:prepare
+      - name: Build cloud-connected installer
+        run: npx electron-builder --win nsis --publish never
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4
         with:
           name: LifeOS-Windows-Installer
           path: dist-desktop/LifeOS Setup *.exe
           if-no-files-found: error
-      - name: Packaged Electron UI and restart persistence
-        shell: pwsh
-        run: node tests/desktop/portable.mjs
