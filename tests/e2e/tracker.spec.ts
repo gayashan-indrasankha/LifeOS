@@ -42,7 +42,9 @@ test('monthly tracker toggles and persists completion across desktop and mobile'
   await expect(tooltip).toBeVisible();
   await row.getByRole('button', { name: `Mark complete for ${habitName} on ${today}` }).click();
   await expect(row).toContainText('1 / 1');
-  const donut = page.getByRole('heading', { name: 'Scheduled habit check-ins' }).locator('../..');
+  const donut = page
+    .getByRole('heading', { name: 'Scheduled habit check-ins', exact: true })
+    .locator('../..');
   await expect(donut).toContainText('1/1');
   await expect(donut).not.toContainText('100%');
   await page.reload();

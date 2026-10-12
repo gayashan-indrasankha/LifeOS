@@ -22,7 +22,7 @@ test('a new area can be added and reused for tasks and goals', async ({ page }) 
   await taskForm.getByLabel('New area name').fill(area);
   await taskForm.getByLabel('Task title').fill(`First area task ${tag}`);
   await taskForm.getByRole('button', { name: 'Add task' }).click();
-  await expect(taskForm.getByText('Task added', { exact: true })).toBeVisible();
+  await expect(taskForm.getByRole('status')).toContainText('Task added.');
   await expect(page.getByRole('heading', { name: `First area task ${tag}` })).toBeVisible();
 
   await page.reload();

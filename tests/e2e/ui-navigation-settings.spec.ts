@@ -53,7 +53,9 @@ test('saved theme applies immediately and mobile navigation reveals the current 
   await expect(page.getByText('Saved successfully')).toBeVisible();
   await page.goto('/today');
   await expect(page).toHaveTitle('Today | LifeOS');
-  await expect(page.getByText('Today · UTC')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible();
+  await page.goto('/settings');
+  await expect(page.getByRole('combobox', { name: 'Timezone' })).toContainText('UTC');
 
   await page.goto('/goals/evidence');
   await expect(page).toHaveTitle('Evidence & Career Readiness | LifeOS');

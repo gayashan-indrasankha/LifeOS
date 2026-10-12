@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import postgres from 'postgres';
 
 test('future habit schedule, archive, and restore preserve earlier checked days', async ({
   page,
@@ -32,8 +33,23 @@ test('future habit schedule, archive, and restore preserve earlier checked days'
   await page.getByLabel('Apply schedule changes from').fill('2026-10-09');
   await page.getByRole('button', { name: 'Save Habit' }).click();
   await expect(page).toHaveURL(/\/habits$/);
+  const sql = postgres(process.env.DATABASE_URL!, { max: 1 });
+  try {
+    const revisions = await sql`
+      SELECT r.schedule, r.effective_date
+      FROM habit_schedule_revisions r
+      JOIN habits h ON h.id = r.habit_id
+      WHERE h.name = ${name}
+      ORDER BY r.effective_date DESC
+      LIMIT 1
+    `;
+    expect(revisions[0]?.schedule).toBe('weekly:3');
+    expect(revisions[0]?.effective_date).toBe('2026-10-09');
+  } finally {
+    await sql.end();
+  }
   await page.goto('/dashboard?month=2026-10');
-  await expect(row).toContainText('3/week');
+  await expect(row).toContainText('1 / 8');
   await expect(
     row.getByRole('button', { name: `Remove completion for ${name} on 2026-10-08` }),
   ).toBeVisible();
@@ -50,7 +66,7 @@ test('future habit schedule, archive, and restore preserve earlier checked days'
   await page.getByRole('menuitem', { name: 'Unarchive' }).click();
   await expect(page.getByText('Archived habits (1)')).toHaveCount(0);
   await page.goto('/dashboard?month=2026-10');
-  await expect(row).toContainText('3/week');
+  await expect(row).toContainText('1 / 8');
   await expect(row).not.toContainText('Archived');
   await expect(
     row.getByRole('button', { name: `Remove completion for ${name} on 2026-10-08` }),

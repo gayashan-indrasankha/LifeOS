@@ -47,7 +47,7 @@ test('interview, English, and weight practice can be managed on mobile', async (
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/goals/evidence');
   const interview = page
-    .locator('form')
+    .locator('#interviews form')
     .filter({ has: page.getByRole('button', { name: 'Save practice' }) });
   await interview.locator('[name="topic"]').fill('JOINs');
   await interview.locator('[name="type"]').selectOption('technical_question');

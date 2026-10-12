@@ -74,6 +74,7 @@ test('Today focus, linked completion, simple empty state, and monthly insights',
   ).toBeVisible();
 
   await page.locator('#today-priorities').getByRole('button', { name: 'Mark done' }).click();
+  await expect(page.locator('#today-priorities')).toContainText('Done');
   await page.goto('/goals?show=finished');
   const task = page
     .locator('li')

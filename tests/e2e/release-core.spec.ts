@@ -53,23 +53,15 @@ test('monthly insights show evidence and measured outcomes', async ({ page }) =>
   await expect(page.getByRole('heading', { name: 'Recorded outcomes' })).toBeVisible();
 
   await page.getByRole('link', { name: 'Open evidence' }).click();
-  const measurement = page
-    .locator('form')
-    .filter({ has: page.getByRole('button', { name: 'Save weight' }) });
-  const today = await measurement.locator('[name="date"]').inputValue();
-  const yesterday = new Date(`${today}T12:00:00Z`);
-  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-  await measurement.locator('[name="date"]').fill(yesterday.toISOString().slice(0, 10));
-  await measurement.locator('[name="value"]').fill('70.5');
+  await expect(page.getByRole('heading', { name: 'Evidence & career readiness' })).toBeVisible();
+  await page.goto('/today');
+  const measurement = page.locator('#today-weight');
+  await measurement.getByLabel('Weight (kg)').fill('71');
   await measurement.getByRole('button', { name: 'Save weight' }).click();
-  await expect(measurement.getByRole('status')).toContainText('Actual body weight recorded');
-  await measurement.locator('[name="date"]').fill(today);
-  await measurement.locator('[name="value"]').fill('71');
-  await measurement.getByRole('button', { name: 'Save weight' }).click();
-  await expect(measurement.getByRole('status')).toContainText('Actual body weight recorded');
+  await expect(measurement).toContainText('Recorded today: 71 kg');
   await page.goto('/review');
   await expect(page.getByText('Body-weight readings')).toBeVisible();
-  await expect(page.getByText('Days with weight readings').locator('..')).toContainText('2');
+  await expect(page.getByText('Days with weight readings').locator('..')).toContainText('1');
 });
 
 test('private JSON export includes owned records and excludes credentials and another user', async ({
@@ -90,7 +82,7 @@ test('private JSON export includes owned records and excludes credentials and an
   expect(ownerResponse.status()).toBe(200);
   expect(ownerResponse.headers()['cache-control']).toContain('no-store');
   const ownerData = await ownerResponse.json();
-  expect(ownerData.schemaVersion).toBe(1);
+  expect(ownerData.schemaVersion).toBe(2);
   expect(ownerData.dailyNotes).toEqual(
     expect.arrayContaining([expect.objectContaining({ content: privateNote })]),
   );

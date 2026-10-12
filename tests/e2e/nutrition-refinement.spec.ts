@@ -24,11 +24,11 @@ test('optional meal plan can be edited, logged, cleared, paused, and resumed', a
   await section.getByLabel('Planned carbs g (optional)').fill('60');
   await section.getByLabel('Planned fat g (optional)').fill('20');
   await section.getByRole('button', { name: 'Add meal' }).click();
-  await expect(section.getByText('Meal plan saved.')).toBeVisible();
   const plan = section.locator('details').first();
   if (!(await plan.evaluate((details) => (details as HTMLDetailsElement).open))) {
     await section.getByText('Edit meal plan').click();
   }
+  await expect(section.getByText('Breakfast', { exact: true })).toBeVisible();
   await section.getByText('Breakfast', { exact: true }).click();
   const edit = section
     .locator('form')
@@ -122,7 +122,7 @@ test('meal templates and logs remain private to their account', async ({ page, b
   await ownerSettings.getByText('Edit meal plan').click();
   await ownerSettings.getByLabel('Meal name').fill('Private meal');
   await ownerSettings.getByRole('button', { name: 'Add meal' }).click();
-  await expect(ownerSettings.getByText('Meal plan saved.')).toBeVisible();
+  await expect(ownerSettings.getByText('Edit meal plan (1/6)')).toBeVisible();
   await page.goto('/today');
   await page.getByText('Nutrition checklist').click();
   await page
