@@ -67,8 +67,19 @@ async function assertNoPageOverflow(page: import('@playwright/test').Page, route
   const dimensions = await page.evaluate(() => ({
     viewport: document.documentElement.clientWidth,
     page: document.documentElement.scrollWidth,
+    overflowing: [...document.querySelectorAll<HTMLElement>('main *')]
+      .filter(
+        (element) =>
+          element.getBoundingClientRect().right > document.documentElement.clientWidth + 1,
+      )
+      .slice(0, 8)
+      .map(
+        (element) =>
+          `${element.tagName.toLowerCase()}.${element.className}=${Math.round(element.getBoundingClientRect().right)}`,
+      ),
   }));
-  expect(dimensions.page, `${route} page overflow at ${dimensions.viewport}px`).toBeLessThanOrEqual(
-    dimensions.viewport + 1,
-  );
+  expect(
+    dimensions.page,
+    `${route} page overflow at ${dimensions.viewport}px: ${dimensions.overflowing.join('; ')}`,
+  ).toBeLessThanOrEqual(dimensions.viewport + 1);
 }

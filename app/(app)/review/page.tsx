@@ -28,7 +28,7 @@ export const metadata = { title: 'Monthly Insights | LifeOS' };
 
 const daysInPeriod = 30;
 const bucketDays = 6;
-const card = 'rounded-2xl border bg-card p-5 shadow-sm sm:p-6';
+const card = 'min-w-0 rounded-2xl border bg-card p-5 shadow-sm sm:p-6';
 
 function shortDate(date: string) {
   return new Intl.DateTimeFormat('en', {
