@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DayCell } from './day-cell';
 import { HabitNameTooltip } from './habit-name-tooltip';
 import { toggleEntryAction } from '@/lib/actions/entry-actions';
@@ -34,6 +34,12 @@ export function HabitRow({
   const pendingRef = useRef(false);
   const [pendingDate, setPendingDate] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    if (pendingRef.current) return;
+    const next = new Set(initialCompletedDates);
+    completedRef.current = next;
+    setCompletedDates(next);
+  }, [initialCompletedDates]);
   const progress = useMemo(
     () => habitMonthProgress(habit, days, completedDates, today),
     [habit, days, completedDates, today],

@@ -49,6 +49,16 @@ export function MealChecklist({
   const [savedId, setSavedId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [pending, startTransition] = useTransition();
+  const [previousInitialStatuses, setPreviousInitialStatuses] = useState(initialStatuses);
+  const [previousInitialActuals, setPreviousInitialActuals] = useState(initialActuals);
+  if (initialStatuses !== previousInitialStatuses) {
+    setPreviousInitialStatuses(initialStatuses);
+    if (pendingId === null) setStatuses(initialStatuses);
+  }
+  if (initialActuals !== previousInitialActuals) {
+    setPreviousInitialActuals(initialActuals);
+    if (pendingId === null) setActuals(initialActuals);
+  }
   const plannedTotals = dailyMealPlanTotals(meals);
   const actualTotals = dailyActualTotals(Object.values(actuals));
   const mealsWithAmounts = Object.values(actuals).filter((amounts) =>
@@ -148,7 +158,8 @@ export function MealChecklist({
             <h3 className="font-semibold">Daily nutrition totals</h3>
             <p className="mt-0.5 text-xs text-muted-foreground">
               <span className="android-standard-copy">
-                Actual amounts are added only when you enter them. Plans use active meals with values.
+                Actual amounts are added only when you enter them. Plans use active meals with
+                values.
               </span>
               <span className="android-mobile-copy">
                 Totals include only the amounts you log, with planned values shown for reference.

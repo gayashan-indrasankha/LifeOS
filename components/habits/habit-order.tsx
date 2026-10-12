@@ -13,6 +13,11 @@ export function HabitOrder({ habits }: { habits: SelectHabit[] }) {
   const [pending, start] = useTransition();
   const [error, setError] = useState('');
   const router = useRouter();
+  const [previousHabits, setPreviousHabits] = useState(habits);
+  if (habits !== previousHabits) {
+    setPreviousHabits(habits);
+    if (!pending) setItems(habits);
+  }
   function move(index: number, offset: number) {
     if (pending || index + offset < 0 || index + offset >= items.length) return;
     const previous = items;

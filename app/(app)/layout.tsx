@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { getUserSettings } from '@/lib/dal/user-settings';
 import { AppSidebar, MobileNav } from '@/components/layout/app-sidebar';
 import { AppHeader } from '@/components/layout/app-header';
+import { CloudRefresh } from '@/components/providers/cloud-refresh';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
@@ -11,6 +12,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className={`${isAndroidApp ? 'lifeos-android ' : ''}flex min-h-screen bg-background`}>
+      <CloudRefresh />
       <AppSidebar user={user} />
       <div className="flex min-w-0 flex-1 flex-col lg:pl-64">
         <AppHeader user={user} settings={settings} />
