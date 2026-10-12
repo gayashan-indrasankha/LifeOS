@@ -44,7 +44,7 @@ test('future habit schedule, archive, and restore preserve earlier checked days'
       LIMIT 1
     `;
     expect(revisions[0]?.schedule).toBe('weekly:3');
-    expect(revisions[0]?.effective_date).toBe('2026-10-09');
+    expect(new Date(revisions[0]?.effective_date).toISOString().slice(0, 10)).toBe('2026-10-09');
   } finally {
     await sql.end();
   }

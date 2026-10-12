@@ -72,6 +72,7 @@ test('interview, English, and weight practice can be managed on mobile', async (
     '30 min',
   );
   await interview.locator('[name="topic"]').fill('Accidental topic');
+  await interview.locator('[name="durationMinutes"]').fill('10');
   await interview.getByRole('button', { name: 'Save practice' }).click();
   await page.reload();
   const accidental = page.locator('#interviews article').filter({ hasText: 'Accidental topic' });
@@ -79,6 +80,7 @@ test('interview, English, and weight practice can be managed on mobile', async (
   await expect(accidental).toHaveCount(0);
   await interview.locator('[name="date"]').fill('2026-10-07');
   await interview.locator('[name="topic"]').fill('Earlier practice');
+  await interview.locator('[name="durationMinutes"]').fill('15');
   await interview.getByRole('button', { name: 'Save practice' }).click();
   await page.reload();
   const earlier = page.locator('#interviews article').filter({ hasText: 'Earlier practice' });
@@ -106,6 +108,7 @@ test('interview, English, and weight practice can be managed on mobile', async (
     page.locator('#english article').filter({ hasText: 'Explain REST APIs' }),
   ).toContainText('15 min');
   await english.locator('[name="topic"]').fill('Accidental English practice');
+  await english.locator('[name="durationMinutes"]').fill('10');
   await english.getByRole('button', { name: 'Save practice' }).click();
   await page.reload();
   const accidentalEnglish = page
@@ -116,6 +119,7 @@ test('interview, English, and weight practice can be managed on mobile', async (
     .click();
   await expect(accidentalEnglish).toHaveCount(0);
   await english.locator('[name="topic"]').fill('Past English session');
+  await english.locator('[name="durationMinutes"]').fill('10');
   await english.getByRole('button', { name: 'Save practice' }).click();
   const sql = postgres(process.env.DATABASE_URL!, { max: 1 });
   try {

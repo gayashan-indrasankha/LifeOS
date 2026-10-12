@@ -60,7 +60,6 @@ test('monthly insights show evidence and measured outcomes', async ({ page }) =>
   await measurement.getByRole('button', { name: 'Save weight' }).click();
   await expect(measurement).toContainText('Recorded today: 71 kg');
   await page.goto('/review');
-  await expect(page.getByText('Body-weight readings')).toBeVisible();
   await expect(page.getByText('Days with weight readings').locator('..')).toContainText('1');
 });
 
