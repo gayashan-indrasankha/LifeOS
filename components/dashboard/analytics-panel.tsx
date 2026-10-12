@@ -8,6 +8,30 @@ import { WeeklyBarChart } from '@/components/analytics/weekly-bar-chart';
 import { TopHabitsList } from '@/components/analytics/top-habits-list';
 import { ProgressSummary } from '@/components/dashboard/progress-summary';
 import { NotesPreview } from '@/components/dashboard/notes-preview';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+function EmptyChartCard({
+  title,
+  height = 'h-48',
+  message = 'No data yet',
+}: {
+  title: string;
+  height?: string;
+  message?: string;
+}) {
+  return (
+    <Card className="analytics-card min-w-0">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+      </CardHeader>
+      <CardContent
+        className={`flex items-center justify-center text-center ${height === 'h-36' ? 'h-36' : 'h-48'}`}
+      >
+        <p className="text-sm text-muted-foreground">{message}</p>
+      </CardContent>
+    </Card>
+  );
+}
 
 interface AnalyticsPanelProps {
   habits: SelectHabit[];
@@ -65,11 +89,27 @@ export function AnalyticsPanel({
         <TopHabitsList topHabits={topHabits} />
       </div>
       <div className="grid min-w-0 gap-4">
-        <DailyLineChart data={dailyProgress} />
-        <WeeklyBarChart data={weeklySummary} />
+        {dailyProgress.some((day) => day.total > 0) ? (
+          <DailyLineChart data={dailyProgress} />
+        ) : (
+          <EmptyChartCard title="Daily Progress" />
+        )}
+        {weeklySummary.some((week) => week.total > 0) ? (
+          <WeeklyBarChart data={weeklySummary} />
+        ) : (
+          <EmptyChartCard
+            title="Scheduled habit check-ins · last 8 weeks"
+            height="h-36"
+            message="No scheduled habit check-ins in these eight weeks"
+          />
+        )}
       </div>
       <div className="grid min-w-0 gap-4 md:col-span-2 xl:col-span-1">
-        <CompletionDonut stats={stats} />
+        {stats.total > 0 ? (
+          <CompletionDonut stats={stats} />
+        ) : (
+          <EmptyChartCard title="Scheduled habit check-ins" />
+        )}
         <NotesPreview content={note} />
       </div>
     </section>
