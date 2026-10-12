@@ -2,9 +2,11 @@ import type { SelectHabit, SelectHabitEntry, CompletionStats } from '@/types';
 import { calculateDailyProgress } from '@/lib/analytics/daily-progress';
 import { calculateEightWeekSummary } from '@/lib/analytics/weekly-summary';
 import { calculateTopHabits } from '@/lib/analytics/top-habits';
-import { CompletionDonut } from '@/components/analytics/completion-donut';
-import { DailyLineChart } from '@/components/analytics/daily-line-chart';
-import { WeeklyBarChart } from '@/components/analytics/weekly-bar-chart';
+import {
+  LazyCompletionDonut,
+  LazyDailyLineChart,
+  LazyWeeklyBarChart,
+} from '@/components/dashboard/lazy-analytics-charts';
 import { TopHabitsList } from '@/components/analytics/top-habits-list';
 import { ProgressSummary } from '@/components/dashboard/progress-summary';
 import { NotesPreview } from '@/components/dashboard/notes-preview';
@@ -90,12 +92,12 @@ export function AnalyticsPanel({
       </div>
       <div className="grid min-w-0 gap-4">
         {dailyProgress.some((day) => day.total > 0) ? (
-          <DailyLineChart data={dailyProgress} />
+          <LazyDailyLineChart data={dailyProgress} />
         ) : (
           <EmptyChartCard title="Daily Progress" />
         )}
         {weeklySummary.some((week) => week.total > 0) ? (
-          <WeeklyBarChart data={weeklySummary} />
+          <LazyWeeklyBarChart data={weeklySummary} />
         ) : (
           <EmptyChartCard
             title="Scheduled habit check-ins · last 8 weeks"
@@ -106,7 +108,7 @@ export function AnalyticsPanel({
       </div>
       <div className="grid min-w-0 gap-4 md:col-span-2 xl:col-span-1">
         {stats.total > 0 ? (
-          <CompletionDonut stats={stats} />
+          <LazyCompletionDonut stats={stats} />
         ) : (
           <EmptyChartCard title="Scheduled habit check-ins" />
         )}

@@ -22,7 +22,7 @@ import { isFixedOccurrence } from '@/lib/analytics/habit-month-progress';
 import { addCalendarDays, weekdayIndex } from '@/lib/planning/time-blocks';
 import { pipelineSummary, weightTrend } from '@/lib/evidence/summary';
 import { LIFE_AREAS, normalizeLifeArea } from '@/lib/life-areas';
-import { WeightTrend } from '@/components/life/weight-trend';
+import { LazyWeightTrend } from '@/components/life/lazy-weight-trend';
 
 export const metadata = { title: 'Monthly Insights | LifeOS' };
 
@@ -655,7 +655,7 @@ export default async function ReviewPage() {
             {weightPoints.length >= 2 && (
               <div className="mt-5 border-t pt-4">
                 <p className="text-sm font-semibold">Body-weight readings</p>
-                <WeightTrend points={weightPoints} target={weightTarget} />
+                <LazyWeightTrend points={weightPoints} target={weightTarget} />
               </div>
             )}
             <p className="mt-4 text-xs text-muted-foreground">

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Scale } from 'lucide-react';
-import { WeightTrend } from '@/components/life/weight-trend';
+import { LazyWeightTrend } from '@/components/life/lazy-weight-trend';
 
 type WeightPoint = { date: string; value: number };
 
@@ -62,7 +62,7 @@ export function HomeWeightCard({
           )}
         </div>
         {points.length >= 2 ? (
-          <WeightTrend points={points} target={target} />
+          <LazyWeightTrend points={points} target={target} />
         ) : (
           <div className="flex min-h-40 items-center justify-center rounded-xl border border-dashed bg-muted/20 px-6 py-8 text-center">
             <p className="max-w-sm text-sm text-muted-foreground">

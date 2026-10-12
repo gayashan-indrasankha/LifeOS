@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { WeightTrend } from './weight-trend';
+import { LazyWeightTrend } from './lazy-weight-trend';
 
 export function GoalWeightTrend({
   points,
@@ -58,7 +58,7 @@ export function GoalWeightTrend({
         </svg>
       </summary>
       <div className="border-t bg-background p-3">
-        <WeightTrend points={points} target={target} />
+        <LazyWeightTrend points={points} target={target} />
         <Link
           href="/dashboard#home-weight"
           className="mt-2 inline-flex min-h-9 items-center rounded-lg px-2 text-sm font-medium text-primary hover:bg-primary/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
