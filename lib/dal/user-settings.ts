@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { userSettings } from '@/lib/db/schema';
@@ -6,7 +7,7 @@ import type { UserSettingsInput } from '@/lib/validations/settings';
 /**
  * Get settings for a user. Returns defaults if not set.
  */
-export async function getUserSettings(userId: string) {
+export const getUserSettings = cache(async (userId: string) => {
   const result = await db
     .select()
     .from(userSettings)
@@ -23,7 +24,7 @@ export async function getUserSettings(userId: string) {
       nutritionEnabled: false,
     }
   );
-}
+});
 
 /**
  * Upsert user settings.
