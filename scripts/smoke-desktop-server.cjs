@@ -89,7 +89,7 @@ async function main() {
       if (route === '/api/export') {
         const backup = await response.json();
         if (
-          backup.schemaVersion !== 1 ||
+          backup.schemaVersion !== 2 ||
           !Array.isArray(backup.habits) ||
           'account' in backup ||
           'session' in backup
