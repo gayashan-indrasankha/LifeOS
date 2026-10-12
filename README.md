@@ -2,9 +2,11 @@
 
 For Vercel and Neon production preparation, environment settings, migrations, and the deployment approval checklist, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
+For the shared online service, connected app packages, and migration steps, see [CLOUD.md](CLOUD.md).
+
 For the double-click Windows application, see [DESKTOP.md](DESKTOP.md).
 
-For the experimental fully offline Android APK build, see [ANDROID.md](ANDROID.md).
+For the Android APK build and its retained local migration mode, see [ANDROID.md](ANDROID.md).
 
 For reproducible release gates, migration upgrades, browser coverage, and observed outcomes, see [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md).
 
@@ -45,9 +47,9 @@ Visit `/register` to create an account or `/login` to return. Successful authent
 - `/review`: compare fixed-habit adherence, finished tasks, completed blocks, and actual measurements; save a private weekly reflection.
 - `/dashboard`: the historical month tracker. Flexible `weekly:N` habits display complete-week quota attainment and monthly raw checks, outside fixed-day percentages. See [SCHEDULING.md](SCHEDULING.md).
 - `/settings/life-os`: choose personal setup sections, inspect a read-only record and schedule preview, then explicitly install missing items. Existing customizations, archived items, and previously removed seeded items are preserved. Nothing is seeded at registration. See [LifeOS setup](docs/LIFE_OS_SETUP.md).
-- `/settings`: set timezone, week start, and theme; enable or pause an optional meal checklist and edit up to six meal templates; download a versioned JSON backup or restore one on another installation. Import replaces the signed-in account's productivity data in one transaction and accepts version 1 or 2 backups. The backup includes private notes, reviews, and LifeOS setup history; it excludes account credentials and profile details. Export the destination's data first if you need to keep it.
+- `/settings`: set timezone, week start, and theme; enable or pause an optional meal checklist and edit up to six meal templates; download a versioned JSON backup, add records safely from another installation, or deliberately replace the signed-in account's data from a backup. Imports accept version 1 or 2. Backups include private notes, reviews, and LifeOS setup history; they exclude account credentials and profile details.
 
-The web PostgreSQL and desktop PGlite databases remain separate. No automatic synchronization is provided.
+Cloud-configured Windows and Android packages use the same hosted PostgreSQL and account as the web app. Legacy local databases remain accessible for backup export during migration. Packages built without `LIFEOS_CLOUD_URL` continue to use local PGlite and do not synchronize.
 
 ## Development commands
 
