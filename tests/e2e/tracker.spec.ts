@@ -94,6 +94,7 @@ test('monthly tracker toggles and persists completion across desktop and mobile'
   const novemberHeight = await weekHeader.evaluate((row) => row.getBoundingClientRect().height);
   expect(novemberHeight).toBeCloseTo(octoberHeight, 0);
   await page.goto('/dashboard?month=2016-02');
+  await expect(page.locator('thead th[title]')).toHaveCount(29);
   const februaryHeight = await weekHeader.evaluate((row) => row.getBoundingClientRect().height);
   expect(februaryHeight).toBeCloseTo(octoberHeight, 0);
   await expect(page.getByRole('row', { name: new RegExp(habitName) })).toHaveCount(0);
