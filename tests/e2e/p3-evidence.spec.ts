@@ -53,6 +53,7 @@ test('interview, English, and weight practice can be managed on mobile', async (
   await interview.locator('[name="type"]').selectOption('technical_question');
   await interview.locator('[name="durationMinutes"]').fill('25');
   await interview.getByRole('button', { name: 'Save practice' }).click();
+  await expect(page.locator('#interviews article').filter({ hasText: 'JOINs' })).toBeVisible();
   await page.reload();
   await expect(page.locator('#interviews [name="topic"]')).toBeVisible();
   const interviewRecord = page.locator('#interviews article').filter({
@@ -67,6 +68,7 @@ test('interview, English, and weight practice can be managed on mobile', async (
   await editInterview.locator('[name="topic"]').fill('SQL joins');
   await editInterview.locator('[name="durationMinutes"]').fill('30');
   await editInterview.getByRole('button', { name: 'Save changes' }).click();
+  await expect(interviewRecord).toContainText('SQL joins');
   await page.reload();
   await expect(page.locator('#interviews article').filter({ hasText: 'SQL joins' })).toContainText(
     '30 min',
@@ -74,6 +76,9 @@ test('interview, English, and weight practice can be managed on mobile', async (
   await interview.locator('[name="topic"]').fill('Accidental topic');
   await interview.locator('[name="durationMinutes"]').fill('10');
   await interview.getByRole('button', { name: 'Save practice' }).click();
+  await expect(
+    page.locator('#interviews article').filter({ hasText: 'Accidental topic' }),
+  ).toBeVisible();
   await page.reload();
   const accidental = page.locator('#interviews article').filter({ hasText: 'Accidental topic' });
   await accidental.getByRole('button', { name: 'Delete Accidental topic' }).click();
@@ -82,6 +87,9 @@ test('interview, English, and weight practice can be managed on mobile', async (
   await interview.locator('[name="topic"]').fill('Earlier practice');
   await interview.locator('[name="durationMinutes"]').fill('15');
   await interview.getByRole('button', { name: 'Save practice' }).click();
+  await expect(
+    page.locator('#interviews article').filter({ hasText: 'Earlier practice' }),
+  ).toBeVisible();
   await page.reload();
   const earlier = page.locator('#interviews article').filter({ hasText: 'Earlier practice' });
   await expect(earlier).toBeVisible();
@@ -93,6 +101,9 @@ test('interview, English, and weight practice can be managed on mobile', async (
   await english.locator('[name="topic"]').fill('Explain API design');
   await english.locator('[name="durationMinutes"]').fill('12');
   await english.getByRole('button', { name: 'Save practice' }).click();
+  await expect(
+    page.locator('#english article').filter({ hasText: 'Explain API design' }),
+  ).toBeVisible();
   await page.reload();
   const englishRecord = page.locator('#english article').filter({ hasText: 'Explain API design' });
   await expect(englishRecord).toContainText('12 min');
@@ -103,6 +114,7 @@ test('interview, English, and weight practice can be managed on mobile', async (
   await editEnglish.locator('[name="topic"]').fill('Explain REST APIs');
   await editEnglish.locator('[name="durationMinutes"]').fill('15');
   await editEnglish.getByRole('button', { name: 'Save changes' }).click();
+  await expect(englishRecord).toContainText('Explain REST APIs');
   await page.reload();
   await expect(
     page.locator('#english article').filter({ hasText: 'Explain REST APIs' }),
@@ -110,6 +122,9 @@ test('interview, English, and weight practice can be managed on mobile', async (
   await english.locator('[name="topic"]').fill('Accidental English practice');
   await english.locator('[name="durationMinutes"]').fill('10');
   await english.getByRole('button', { name: 'Save practice' }).click();
+  await expect(
+    page.locator('#english article').filter({ hasText: 'Accidental English practice' }),
+  ).toBeVisible();
   await page.reload();
   const accidentalEnglish = page
     .locator('#english article')
@@ -121,6 +136,9 @@ test('interview, English, and weight practice can be managed on mobile', async (
   await english.locator('[name="topic"]').fill('Past English session');
   await english.locator('[name="durationMinutes"]').fill('10');
   await english.getByRole('button', { name: 'Save practice' }).click();
+  await expect(
+    page.locator('#english article').filter({ hasText: 'Past English session' }),
+  ).toBeVisible();
   const sql = postgres(process.env.DATABASE_URL!, { max: 1 });
   try {
     await sql`
