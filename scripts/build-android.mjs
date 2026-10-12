@@ -6,6 +6,17 @@ import path from 'node:path';
 import { verifyCloudOrigin } from './verify-cloud-origin.mjs';
 
 const root = process.cwd();
+const release = process.argv.includes('--release');
+if (release) {
+  for (const key of [
+    'LIFEOS_ANDROID_KEYSTORE',
+    'LIFEOS_ANDROID_KEYSTORE_PASSWORD',
+    'LIFEOS_ANDROID_KEY_ALIAS',
+    'LIFEOS_ANDROID_KEY_PASSWORD',
+  ]) {
+    if (!process.env[key]) throw new Error(`Set ${key} before building a release APK.`);
+  }
+}
 if (process.env.LIFEOS_CLOUD_URL) {
   await verifyCloudOrigin(process.env.LIFEOS_CLOUD_URL);
 }
@@ -36,8 +47,15 @@ const exitCode = await new Promise((resolve, reject) => {
   const windows = process.platform === 'win32';
   const command = windows ? process.env.ComSpec || 'C:\\Windows\\System32\\cmd.exe' : gradle;
   const args = windows
-    ? ['/d', '/c', gradle, 'assembleDebug', '--no-daemon', '--console=plain']
-    : ['assembleDebug', '--no-daemon', '--console=plain'];
+    ? [
+        '/d',
+        '/c',
+        gradle,
+        release ? 'assembleRelease' : 'assembleDebug',
+        '--no-daemon',
+        '--console=plain',
+      ]
+    : [release ? 'assembleRelease' : 'assembleDebug', '--no-daemon', '--console=plain'];
   const build = spawn(command, args, {
     cwd: path.join(root, 'android'),
     stdio: 'inherit',
@@ -51,8 +69,18 @@ if (exitCode !== 0) throw new Error(`Android build failed with exit code ${exitC
 const version = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8')).version;
 const outputDir = path.join(root, 'dist-android');
 await mkdir(outputDir, { recursive: true });
-const apk = path.join(root, 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
-const output = path.join(outputDir, `LifeOS-${version}-arm64.apk`);
+const variant = release ? 'release' : 'debug';
+const apk = path.join(
+  root,
+  'android',
+  'app',
+  'build',
+  'outputs',
+  'apk',
+  variant,
+  `app-${variant}.apk`,
+);
+const output = path.join(outputDir, `LifeOS-${version}-arm64${release ? '-release' : ''}.apk`);
 await copyFile(apk, output);
 const hash = createHash('sha256')
   .update(await readFile(output))

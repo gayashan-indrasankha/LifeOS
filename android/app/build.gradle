@@ -42,9 +42,24 @@ android {
         }
     }
 
+    signingConfigs {
+        release {
+            def keystore = System.getenv('LIFEOS_ANDROID_KEYSTORE')
+            if (keystore) {
+                storeFile file(keystore)
+                storePassword System.getenv('LIFEOS_ANDROID_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('LIFEOS_ANDROID_KEY_ALIAS')
+                keyPassword System.getenv('LIFEOS_ANDROID_KEY_PASSWORD')
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
+            if (System.getenv('LIFEOS_ANDROID_KEYSTORE')) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 

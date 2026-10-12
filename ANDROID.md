@@ -24,6 +24,8 @@ npm.cmd run android:apk
 
 The signed debug APK is copied to `dist-android/LifeOS-0.1.0-arm64.apk`. The build prints its SHA-256 hash. This is a personal test build signed with the local Android debug key. Retain that key to install future updates over the existing app; installing a build signed with another key requires uninstalling the old package, which deletes its private data. Export a JSON backup before uninstalling.
 
+For a distributable cloud build, keep the Android signing keystore and its passwords outside Git. Set `LIFEOS_CLOUD_URL` to the deployed HTTPS origin, plus `LIFEOS_ANDROID_KEYSTORE`, `LIFEOS_ANDROID_KEYSTORE_PASSWORD`, `LIFEOS_ANDROID_KEY_ALIAS`, and `LIFEOS_ANDROID_KEY_PASSWORD`. Then run `npm.cmd run android:release-apk`. The signed, non-debuggable APK is copied to `dist-android/LifeOS-0.1.0-arm64-release.apk`. The first release key for this installation is in the ignored `.android-toolchain/release/` directory on the build computer. Back up both `lifeos-release.jks` and `signing.env` securely: future updates must use the same key. A debug-signed installation must be uninstalled before installing this release-signed package.
+
 For an already prepared runtime, run `npm.cmd run android:smoke` and `android\gradlew.bat assembleDebug` separately. The server bundle is staged in the ignored `android-stage/` directory; the Android SDK, Node executable, and generated APK are also ignored by Git.
 
 ## Device check

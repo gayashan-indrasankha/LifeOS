@@ -25,7 +25,8 @@
     "desktop:package": "npm run icons:generate && npm run build && npm run desktop:prepare && electron-builder --win nsis --publish never",
     "android:prepare": "npm run build && node scripts/prepare-android.mjs",
     "android:smoke": "node scripts/smoke-android-server.cjs",
-    "android:apk": "npm run icons:generate && npm run android:prepare && npm run android:smoke && node scripts/build-android.mjs"
+    "android:apk": "npm run icons:generate && npm run android:prepare && npm run android:smoke && node scripts/build-android.mjs",
+    "android:release-apk": "npm run icons:generate && npm run android:prepare && npm run android:smoke && node scripts/build-android.mjs --release"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",
