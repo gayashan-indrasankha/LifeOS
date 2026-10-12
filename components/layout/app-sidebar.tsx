@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   ListChecks,
@@ -32,7 +32,24 @@ function isActivePath(pathname: string, href: string) {
 
 export function MobileNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const navRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    // Links outside the horizontal viewport are not prefetched by Next.js.
+    // Warm those page payloads after the initial page has become interactive.
+    const prefetch = () => {
+      for (const href of ['/goals', '/review', '/notes', '/settings']) {
+        router.prefetch(href);
+      }
+    };
+    if (typeof window.requestIdleCallback === 'function') {
+      const idleId = window.requestIdleCallback(prefetch, { timeout: 3000 });
+      return () => window.cancelIdleCallback(idleId);
+    }
+    const timeoutId = setTimeout(prefetch, 1500);
+    return () => clearTimeout(timeoutId);
+  }, [router]);
 
   useEffect(() => {
     if (!window.matchMedia('(max-width: 1023px)').matches) return;
