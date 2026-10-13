@@ -152,7 +152,9 @@ export function HabitForm({
                 <button
                   key={icon}
                   type="button"
-                  onClick={() => setValue('icon', icon)}
+                  onClick={() =>
+                    setValue('icon', icon, { shouldDirty: true, shouldValidate: true })
+                  }
                   aria-label={`Select icon ${icon}`}
                   aria-pressed={selectedIcon === icon}
                   className={`flex h-9 w-9 items-center justify-center rounded-lg border-2 text-lg transition-all ${
@@ -168,13 +170,41 @@ export function HabitForm({
               {selectedIcon && (
                 <button
                   type="button"
-                  onClick={() => setValue('icon', '')}
+                  onClick={() => setValue('icon', '', { shouldDirty: true, shouldValidate: true })}
                   className="h-9 rounded-lg border-2 border-border px-2 text-xs text-muted-foreground hover:border-destructive hover:text-destructive"
                 >
                   Clear
                 </button>
               )}
             </div>
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <Label htmlFor="custom-icon" className="shrink-0 text-sm font-normal">
+                Or use your own emoji
+              </Label>
+              <Input
+                id="custom-icon"
+                type="text"
+                value={selectedIcon}
+                onChange={(event) =>
+                  setValue('icon', event.target.value, { shouldDirty: true, shouldValidate: true })
+                }
+                onFocus={(event) => event.currentTarget.select()}
+                maxLength={50}
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="😊"
+                aria-describedby="custom-icon-help"
+                className="h-11 w-24 text-center text-xl"
+              />
+              <p id="custom-icon-help" className="text-xs text-muted-foreground">
+                Type or paste an emoji from your keyboard.
+              </p>
+            </div>
+            {(errors.icon || state.fieldErrors?.icon) && (
+              <p role="alert" className="text-sm text-destructive">
+                {errors.icon?.message ?? state.fieldErrors?.icon?.[0]}
+              </p>
+            )}
             <input type="hidden" {...register('icon')} />
           </div>
 
