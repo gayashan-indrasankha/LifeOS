@@ -169,6 +169,13 @@
       "when": 1791653387543,
       "tag": "0023_exotic_solo",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791950400000,
+      "tag": "0024_realtime_changes",
+      "breakpoints": true
     }
   ]
 }

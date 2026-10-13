@@ -1,6 +1,6 @@
 # LifeOS shared cloud deployment
 
-LifeOS uses one Next.js application and one PostgreSQL database for the web, Windows, and Android clients. The cloud site owns authentication and all active data. The installed apps open the same HTTPS origin; an open app refreshes its current page when focused and every 15 seconds while visible. JSON export and restore remain available in Settings.
+LifeOS uses one Next.js application and one PostgreSQL database for the web, Windows, and Android clients. The cloud site owns authentication and all active data. The installed Android app listens for committed database changes while it is open and refreshes the affected page; a 15-second refresh is retained when the stream is disconnected. JSON export and restore remain available in Settings.
 
 ## Provision the service
 

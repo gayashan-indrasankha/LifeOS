@@ -306,7 +306,7 @@ export default async function TodayPage({
               <ul className="grid gap-2 sm:grid-cols-2">
                 {habitItems.map(({ habit, completed, detail }) => (
                   <TodayHabit
-                    key={habit.id}
+                    key={`${habit.id}:${completed}`}
                     id={habit.id}
                     name={habit.name}
                     date={date}

@@ -9,6 +9,7 @@ import android.graphics.Insets;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowInsets;
@@ -110,6 +111,7 @@ public class MainActivity extends Activity {
                     + "new MutationObserver(sync).observe(document.documentElement,"
                     + "{attributes:true,attributeFilter:['class']});"
                     + "})()", null);
+                if (url.startsWith("https://")) installCloudRefresh(view);
             }
 
             @Override
@@ -201,6 +203,35 @@ public class MainActivity extends Activity {
                 | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
             controller.setSystemBarsAppearance(dark ? 0 : mask, mask);
         }
+    }
+
+    private void installCloudRefresh(WebView view) {
+        view.evaluateJavascript("(() => {"
+            + "if (window.__lifeosAndroidSync) return 'already-installed';"
+            + "window.__lifeosAndroidSync = true;"
+            + "const style = document.createElement('style');"
+            + "style.textContent = '.lifeos-android header.sticky{background:var(--card);"
+            + "-webkit-backdrop-filter:none;backdrop-filter:none}';"
+            + "document.head.appendChild(style);"
+            + "let lastRefresh = Date.now();"
+            + "const refresh = () => {"
+            + "if (window.__lifeosRealtimeConnected) return;"
+            + "if (!document.querySelector('.lifeos-android') || document.hidden || !navigator.onLine) return;"
+            + "if (Date.now() - lastRefresh < 2000) return;"
+            + "const active = document.activeElement;"
+            + "if (active && active.matches('input,textarea,select,[contenteditable]')) return;"
+            + "lastRefresh = Date.now();"
+            + "if (window.next && window.next.router && typeof window.next.router.refresh === 'function')"
+            + "window.next.router.refresh();"
+            + "else window.location.reload();"
+            + "};"
+            + "window.addEventListener('lifeos:android-resume', refresh);"
+            + "window.addEventListener('focus', refresh);"
+            + "window.addEventListener('online', refresh);"
+            + "document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });"
+            + "window.setInterval(refresh, 15000);"
+            + "return window.next && window.next.router ? 'router' : 'reload';"
+            + "})()", result -> Log.i("LifeOSSync", "Cloud refresh mode: " + result));
     }
 
     private void startLocalApp() {
@@ -359,6 +390,15 @@ public class MainActivity extends Activity {
                 "Backup export failed: " + error.getMessage(), Toast.LENGTH_LONG).show());
         } finally {
             if (connection != null) connection.disconnect();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (webView != null && origin != null) {
+            webView.post(() -> webView.evaluateJavascript(
+                "window.dispatchEvent(new Event('lifeos:android-resume'))", null));
         }
     }
 

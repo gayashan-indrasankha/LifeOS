@@ -26,6 +26,8 @@ Better Auth uses the canonical URL as its sole trusted origin. Each Preview depl
 
 For migration CLI execution, `drizzle.config.ts` prefers `MIGRATION_DATABASE_URL` over `DATABASE_URL`. Pass secrets through the process environment or a protected, ignored env file. `scripts/check-db.mjs` reads `DATABASE_URL`; test the direct URL by setting that variable for the check process.
 
+Android real-time updates use an authenticated server-sent event stream backed by PostgreSQL `LISTEN/NOTIFY`. The server derives a direct Neon hostname from the pooled `DATABASE_URL`; set `REALTIME_DATABASE_URL` to a direct TLS connection URL if the database provider uses a different naming convention. Each open Android stream holds one direct database connection for up to four minutes, then reconnects. Check direct connection limits before scaling to many simultaneous devices. Apply migration `0024_realtime_changes.sql` before deploying the matching app build.
+
 ## Build and release
 
 Vercel: Framework Preset **Next.js**, root directory repository root, install command `npm ci`, build command `npm run build`, no custom output directory. Use Node.js 20.9 or newer supported by the pinned Next.js version. The app uses Node runtime database connections; keep the database access out of Edge middleware.

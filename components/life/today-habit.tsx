@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { toggleEntryAction } from '@/lib/actions/entry-actions';
+import type { RealtimeChange } from '@/components/providers/realtime-sync';
 
 export function TodayHabit({
   id,
@@ -19,6 +20,21 @@ export function TodayHabit({
   const [checked, setChecked] = useState(completed);
   const [pending, start] = useTransition();
   const [error, setError] = useState('');
+  useEffect(() => {
+    const onChange = (event: Event) => {
+      const change = (event as CustomEvent<RealtimeChange>).detail;
+      if (
+        change.table === 'habit_entries' &&
+        change.habitId === id &&
+        change.date === date &&
+        typeof change.completed === 'boolean'
+      ) {
+        setChecked(change.completed);
+      }
+    };
+    window.addEventListener('lifeos:realtime-change', onChange);
+    return () => window.removeEventListener('lifeos:realtime-change', onChange);
+  }, [id, date]);
   return (
     <li className="rounded-xl border bg-card p-3">
       <label className="flex min-h-10 cursor-pointer items-center gap-3">

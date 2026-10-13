@@ -13,6 +13,7 @@ import {
   type CalendarDay,
 } from '@/lib/analytics/habit-month-progress';
 import type { SelectHabit } from '@/types';
+import type { RealtimeChange } from '@/components/providers/realtime-sync';
 
 interface HabitRowProps {
   habit: SelectHabit;
@@ -40,6 +41,25 @@ export function HabitRow({
     completedRef.current = next;
     setCompletedDates(next);
   }, [initialCompletedDates]);
+  useEffect(() => {
+    const onChange = (event: Event) => {
+      const change = (event as CustomEvent<RealtimeChange>).detail;
+      if (
+        change.table !== 'habit_entries' ||
+        change.habitId !== habit.id ||
+        !change.date ||
+        typeof change.completed !== 'boolean'
+      )
+        return;
+      const next = new Set(completedRef.current);
+      if (change.completed) next.add(change.date);
+      else next.delete(change.date);
+      completedRef.current = next;
+      setCompletedDates(next);
+    };
+    window.addEventListener('lifeos:realtime-change', onChange);
+    return () => window.removeEventListener('lifeos:realtime-change', onChange);
+  }, [habit.id]);
   const progress = useMemo(
     () => habitMonthProgress(habit, days, completedDates, today),
     [habit, days, completedDates, today],

@@ -507,6 +507,12 @@ details[open] > .evidence-action-trigger::after {
   background: color-mix(in oklab, var(--muted) 25%, var(--card));
 }
 
+.lifeos-android header.sticky {
+  background: var(--card);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

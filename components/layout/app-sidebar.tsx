@@ -30,12 +30,13 @@ function isActivePath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function MobileNav() {
+export function MobileNav({ isAndroidApp = false }: { isAndroidApp?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
+    if (isAndroidApp) return;
     // Links outside the horizontal viewport are not prefetched by Next.js.
     // Warm those page payloads after the initial page has become interactive.
     const prefetch = () => {
@@ -49,7 +50,7 @@ export function MobileNav() {
     }
     const timeoutId = setTimeout(prefetch, 1500);
     return () => clearTimeout(timeoutId);
-  }, [router]);
+  }, [router, isAndroidApp]);
 
   useEffect(() => {
     if (!window.matchMedia('(max-width: 1023px)').matches) return;
@@ -75,7 +76,7 @@ export function MobileNav() {
         <Link
           key={item.href}
           href={item.href}
-          prefetch={true}
+          prefetch={isAndroidApp ? undefined : true}
           aria-current={isActivePath(pathname, item.href) ? 'page' : undefined}
           className={cn(
             'flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary',
