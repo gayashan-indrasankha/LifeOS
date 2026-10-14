@@ -39,20 +39,43 @@ export const ProjectSchema = z.object({
     .transform((value) => value || null),
 });
 
-export const TaskSchema = z.object({
-  title,
-  details: optionalText(4000),
-  area,
-  priority: z.coerce.number().int().min(1).max(3),
-  estimatedMinutes: z
-    .union([z.literal(''), z.coerce.number().int().min(1).max(1440)])
-    .transform((value) => (value === '' ? null : value)),
-  dueDate: optionalDate,
-  scheduledDate: optionalDate,
-  goalId: optionalId,
-  projectId: optionalId,
-  isMilestone: z.boolean(),
-});
+export const TaskSchema = z
+  .object({
+    title,
+    details: optionalText(4000),
+    area,
+    priority: z.coerce.number().int().min(1).max(3),
+    estimatedMinutes: z
+      .union([z.literal(''), z.coerce.number().int().min(1).max(1440)])
+      .transform((value) => (value === '' ? null : value)),
+    dueDate: optionalDate,
+    scheduledDate: optionalDate,
+    recurrence: z.enum(['once', 'daily', 'weekly']).default('once'),
+    weekdays: z
+      .string()
+      .regex(/^[01]{7}$/)
+      .nullable()
+      .optional(),
+    goalId: optionalId,
+    projectId: optionalId,
+    isMilestone: z.boolean(),
+  })
+  .superRefine((task, ctx) => {
+    if (task.recurrence !== 'once') {
+      if (!task.scheduledDate || !task.dueDate || task.dueDate < task.scheduledDate)
+        ctx.addIssue({
+          code: 'custom',
+          path: ['dueDate'],
+          message: 'Repeating tasks need a start date and an end date on or after it.',
+        });
+      if (task.recurrence === 'weekly' && (!task.weekdays || !task.weekdays.includes('1')))
+        ctx.addIssue({
+          code: 'custom',
+          path: ['weekdays'],
+          message: 'Choose at least one weekday.',
+        });
+    }
+  });
 
 export const BlockSchema = z
   .object({

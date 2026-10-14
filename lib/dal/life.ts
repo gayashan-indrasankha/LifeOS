@@ -8,6 +8,7 @@ import {
   subjectAssessments,
   subjects,
   tasks,
+  taskCompletions,
   timeBlockExceptions,
   timeBlockRevisions,
   timeBlocks,
@@ -28,6 +29,19 @@ export const getTasks = (userId: string) =>
     .from(tasks)
     .where(eq(tasks.userId, userId))
     .orderBy(asc(tasks.status), asc(tasks.sortOrder), asc(tasks.createdAt));
+export const getTaskCompletionKeys = async (userId: string, start: string, end: string) => {
+  const rows = await db
+    .select({ taskId: taskCompletions.taskId, date: taskCompletions.date })
+    .from(taskCompletions)
+    .where(
+      and(
+        eq(taskCompletions.userId, userId),
+        gte(taskCompletions.date, start),
+        lte(taskCompletions.date, end),
+      ),
+    );
+  return new Set(rows.map((row) => `${row.taskId}:${row.date}`));
+};
 export const getSubjects = (userId: string) =>
   db.select().from(subjects).where(eq(subjects.userId, userId)).orderBy(asc(subjects.slot));
 export const getAssessments = (userId: string) =>

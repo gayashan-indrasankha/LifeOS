@@ -379,6 +379,8 @@ export const tasks = pgTable(
     actualMinutes: integer('actual_minutes'),
     dueDate: date('due_date'),
     scheduledDate: date('scheduled_date'),
+    recurrence: varchar('recurrence', { length: 12 }).notNull().default('once'),
+    weekdays: varchar('weekdays', { length: 7 }),
     dailyPriority: smallint('daily_priority'),
     sortOrder: integer('sort_order').notNull().default(0),
     isMilestone: boolean('is_milestone').notNull().default(false),
@@ -402,6 +404,25 @@ export const tasks = pgTable(
       foreignColumns: [projects.userId, projects.id],
       name: 'tasks_project_owner_fk',
     }),
+  ],
+);
+
+export const taskCompletions = pgTable(
+  'task_completions',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    taskId: uuid('task_id').notNull(),
+    date: date('date').notNull(),
+    completedAt: timestamp('completed_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('task_completions_user_task_date_unique').on(t.userId, t.taskId, t.date),
+    foreignKey({
+      columns: [t.userId, t.taskId],
+      foreignColumns: [tasks.userId, tasks.id],
+    }).onDelete('cascade'),
   ],
 );
 

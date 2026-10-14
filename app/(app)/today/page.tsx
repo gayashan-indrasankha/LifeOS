@@ -3,7 +3,8 @@ import { ChevronDown, ListChecks, NotebookPen, Scale } from 'lucide-react';
 import { format } from 'date-fns';
 import { requireUser } from '@/lib/auth/session';
 import { getUserSettings } from '@/lib/dal/user-settings';
-import { getTasks, getDayPlan, getProjects } from '@/lib/dal/life';
+import { getTasks, getDayPlan, getProjects, getTaskCompletionKeys } from '@/lib/dal/life';
+import { taskOccurrences } from '@/lib/planning/task-recurrence';
 import { getActiveHabitsByUser } from '@/lib/dal/habits';
 import { getEntriesByUserAndDateRange } from '@/lib/dal/habit-entries';
 import { getNoteByUserAndDate } from '@/lib/dal/notes';
@@ -83,6 +84,8 @@ export default async function TodayPage({
         .limit(1),
     ]);
   const latestWeight = weights[0] ?? null;
+  const completedTasks = await getTaskCompletionKeys(user.id, date, date);
+  const todayOccurrences = taskOccurrences(allTasks, date, date, completedTasks);
   const todayWeight = latestWeight?.date === date ? latestWeight : null;
   const mode = dayPlan?.mode === 'minimum' || dayPlan?.mode === 'reduced' ? dayPlan.mode : 'normal';
   const selected = allTasks
@@ -90,7 +93,7 @@ export default async function TodayPage({
     .sort((a, b) => (a.dailyPriority ?? 9) - (b.dailyPriority ?? 9))
     .slice(0, 3);
   const selectedIds = new Set(selected.map((task) => task.id));
-  const otherTodayTasks = allTasks
+  const otherTodayTasks = todayOccurrences
     .filter(
       (task) =>
         task.scheduledDate === date && task.status !== 'cancelled' && !selectedIds.has(task.id),
@@ -104,6 +107,7 @@ export default async function TodayPage({
     (task) =>
       task.status !== 'done' &&
       task.status !== 'cancelled' &&
+      task.recurrence === 'once' &&
       !selected.some((item) => item.id === task.id),
   );
   const backlogChoices = backlog.map((task) => ({
@@ -122,6 +126,7 @@ export default async function TodayPage({
     .filter(
       (task) =>
         !['done', 'cancelled'].includes(task.status) &&
+        task.recurrence === 'once' &&
         !tomorrowSelected.some((item) => item.id === task.id),
     )
     .map((task) => ({
@@ -279,7 +284,13 @@ export default async function TodayPage({
               {otherTodayTasks.map((task) => (
                 <WeekTaskItem
                   key={task.id}
-                  task={{ id: task.id, title: task.title, area: task.area, status: task.status }}
+                  task={{
+                    id: task.id,
+                    title: task.title,
+                    area: task.area,
+                    status: task.status,
+                    recurrence: task.recurrence,
+                  }}
                   date={date}
                   weekStart={date}
                 />

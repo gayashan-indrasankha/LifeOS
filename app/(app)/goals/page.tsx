@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { requireUser } from '@/lib/auth/session';
-import { getGoals, getMetrics, getProjects, getTasks } from '@/lib/dal/life';
+import { getGoals, getMetrics, getProjects, getTasks, getTaskCompletionKeys } from '@/lib/dal/life';
 import { getUserSettings } from '@/lib/dal/user-settings';
 import { getTodayInTimezone, toDateString } from '@/lib/utils/date';
 import {
@@ -8,6 +8,7 @@ import {
   createTaskAction,
   editTaskAction,
   updateTaskAction,
+  toggleTaskOccurrenceAction,
 } from '@/lib/actions/life-actions';
 import { ActionForm } from '@/components/life/action-form';
 import { DeleteTaskButton } from '@/components/life/delete-task-button';
@@ -17,6 +18,8 @@ import { EditGoalForm } from '@/components/life/entity-edit-forms';
 import { setGoalArchiveAction } from '@/lib/actions/life-actions';
 import { GoalWeightTrend } from '@/components/life/goal-weight-trend';
 import { ProjectsTab } from '@/components/life/projects-tab';
+import { TaskRepeatField } from '@/components/life/task-repeat-field';
+import { occursOn as taskOccursOn } from '@/lib/planning/task-recurrence';
 import { weightTrend } from '@/lib/evidence/summary';
 import { LIFE_AREAS, normalizeLifeArea } from '@/lib/life-areas';
 
@@ -41,6 +44,7 @@ export default async function GoalsPage({
     getUserSettings(userId),
   ]);
   const today = toDateString(getTodayInTimezone(settings.timezone));
+  const completedToday = await getTaskCompletionKeys(userId, today, today);
   const activeTasks = tasks.filter((task) => !['done', 'cancelled'].includes(task.status));
   const inactiveTasks = tasks.filter((task) => ['done', 'cancelled'].includes(task.status));
   const activeGoals = goals.filter((goal) => !goal.archivedAt);
@@ -466,6 +470,7 @@ export default async function GoalsPage({
                       className="mt-1.5 min-h-11 w-full rounded-lg border bg-background px-3 font-normal"
                     />
                   </label>
+                  <TaskRepeatField />
                   <label className="flex min-h-11 items-center gap-2 text-sm font-medium">
                     <input type="checkbox" name="isMilestone" /> Project milestone
                   </label>
@@ -515,20 +520,55 @@ export default async function GoalsPage({
                             {task.title}
                           </h4>
                           <p className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                            <span>{task.status === 'in_progress' ? 'In progress' : 'To do'}</span>
+                            <span>
+                              {task.recurrence !== 'once' &&
+                              completedToday.has(`${task.id}:${today}`)
+                                ? 'Done today'
+                                : task.status === 'in_progress'
+                                  ? 'In progress'
+                                  : 'To do'}
+                            </span>
                             {task.scheduledDate && <span>Start {task.scheduledDate}</span>}
                             {task.dueDate && <span>End {task.dueDate}</span>}
+                            {task.recurrence !== 'once' && (
+                              <span>
+                                {task.recurrence === 'daily' ? 'Every day' : 'Selected weekdays'}
+                              </span>
+                            )}
                           </p>
                         </div>
-                        <ActionForm
-                          action={updateTaskAction}
-                          submitLabel="Mark done"
-                          className="shrink-0 self-start"
-                          showSuccess={false}
-                        >
-                          <input type="hidden" name="id" value={task.id} />
-                          <input type="hidden" name="status" value="done" />
-                        </ActionForm>
+                        {(task.recurrence === 'once' || taskOccursOn(task, today)) && (
+                          <ActionForm
+                            action={
+                              task.recurrence === 'once'
+                                ? updateTaskAction
+                                : toggleTaskOccurrenceAction
+                            }
+                            submitLabel={
+                              task.recurrence === 'once'
+                                ? 'Mark done'
+                                : completedToday.has(`${task.id}:${today}`)
+                                  ? 'Reopen today'
+                                  : 'Mark today done'
+                            }
+                            className="shrink-0 self-start"
+                            showSuccess={false}
+                          >
+                            <input type="hidden" name="id" value={task.id} />
+                            {task.recurrence === 'once' ? (
+                              <input type="hidden" name="status" value="done" />
+                            ) : (
+                              <>
+                                <input type="hidden" name="date" value={today} />
+                                <input
+                                  type="hidden"
+                                  name="completed"
+                                  value={completedToday.has(`${task.id}:${today}`) ? 'no' : 'yes'}
+                                />
+                              </>
+                            )}
+                          </ActionForm>
+                        )}
                       </div>
                       <div className="mt-4 grid grid-cols-[1fr_auto] items-start gap-2 border-t pt-3">
                         <details className="group min-w-0 open:col-span-2">
@@ -646,6 +686,7 @@ export default async function GoalsPage({
                                 className="mt-1.5 min-h-11 w-full rounded-lg border bg-background px-3 font-normal"
                               />
                             </label>
+                            <TaskRepeatField initial={task.recurrence} weekdays={task.weekdays} />
                             <label className="flex min-h-11 items-center gap-2 text-sm font-medium">
                               <input
                                 type="checkbox"

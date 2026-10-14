@@ -1,9 +1,9 @@
-import { eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/session';
 import { backupTables } from '@/lib/backup/format';
 import { BackupRequestError, readBackupRequest } from '@/lib/backup/request';
 import { db } from '@/lib/db';
-import { habits, userSettings } from '@/lib/db/schema';
+import { habits, taskCompletions, userSettings } from '@/lib/db/schema';
 
 function sameValue(a: unknown, b: unknown) {
   const normalize = (value: unknown) => (value instanceof Date ? value.toISOString() : value);
@@ -58,6 +58,32 @@ export async function POST(request: Request) {
               await tx
                 .insert(userSettings)
                 .values({ ...row, userId: user.id } as typeof userSettings.$inferInsert);
+              added++;
+            }
+          }
+          continue;
+        }
+        if (name === 'taskCompletions') {
+          for (const row of rows) {
+            const [existing] = await tx
+              .select()
+              .from(taskCompletions)
+              .where(
+                and(
+                  eq(taskCompletions.userId, user.id),
+                  eq(taskCompletions.taskId, row.taskId as string),
+                  eq(taskCompletions.date, row.date as string),
+                ),
+              )
+              .limit(1);
+            if (existing) {
+              if (!sameValue(existing.completedAt, row.completedAt))
+                throw new Error('Conflicting task completion record');
+              alreadyPresent++;
+            } else {
+              await tx
+                .insert(taskCompletions)
+                .values({ ...row, userId: user.id } as typeof taskCompletions.$inferInsert);
               added++;
             }
           }

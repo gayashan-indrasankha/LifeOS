@@ -16,6 +16,7 @@ import {
   subjectAssessments,
   subjects,
   tasks,
+  taskCompletions,
   timeBlockExceptions,
   timeBlockRevisions,
   timeBlocks,
@@ -36,6 +37,7 @@ import {
 } from '@/lib/planning/time-blocks';
 import { scheduledInstant, statusTimeError } from '@/lib/planning/occurrence-time';
 import { planPriorityOrder } from '@/lib/planning/priorities';
+import { occursOn as taskOccursOn } from '@/lib/planning/task-recurrence';
 import {
   BlockSchema,
   DayModeSchema,
@@ -345,6 +347,8 @@ export async function createTaskAction(
     estimatedMinutes: nullable(form, 'estimatedMinutes'),
     dueDate: nullable(form, 'dueDate'),
     scheduledDate: nullable(form, 'scheduledDate'),
+    recurrence: nullable(form, 'recurrence') || 'once',
+    weekdays: form.has('weekdaySelection') ? weekdays(form) : null,
     goalId: nullable(form, 'goalId'),
     projectId: nullable(form, 'projectId'),
     isMilestone: checked(form, 'isMilestone'),
@@ -507,6 +511,8 @@ export async function editTaskAction(_: LifeActionState, form: FormData): Promis
     estimatedMinutes: nullable(form, 'estimatedMinutes'),
     dueDate: nullable(form, 'dueDate'),
     scheduledDate: nullable(form, 'scheduledDate'),
+    recurrence: nullable(form, 'recurrence') || 'once',
+    weekdays: form.has('weekdaySelection') ? weekdays(form) : null,
     goalId: nullable(form, 'goalId'),
     projectId: nullable(form, 'projectId'),
     isMilestone: checked(form, 'isMilestone'),
@@ -551,11 +557,14 @@ export async function editTaskAction(_: LifeActionState, form: FormData): Promis
         .where(and(eq(tasks.userId, userId), eq(tasks.id, id.data)))
         .limit(1);
       if (!locked) throw new Error('missing');
-      const changedDate = parsed.data.scheduledDate !== locked.scheduledDate;
+      const changedDate =
+        parsed.data.scheduledDate !== locked.scheduledDate ||
+        parsed.data.recurrence !== locked.recurrence;
       await tx
         .update(tasks)
         .set({
           ...parsed.data,
+          ...(parsed.data.recurrence !== 'once' ? { status: 'todo', completedAt: null } : {}),
           ...(changedDate ? { dailyPriority: null } : {}),
           updatedAt: new Date(),
         })
@@ -624,6 +633,13 @@ export async function updateTaskAction(
         .where(and(eq(tasks.userId, userId), eq(tasks.id, parsed.data.id)))
         .limit(1);
       if (!previous) throw new Error('missing');
+      if (
+        previous.recurrence !== 'once' &&
+        (parsed.data.status === 'done' ||
+          parsed.data.scheduledDate !== undefined ||
+          parsed.data.actualMinutes !== undefined)
+      )
+        throw new Error('recurring');
       const changedDate =
         parsed.data.scheduledDate !== undefined &&
         (parsed.data.scheduledDate || null) !== previous.scheduledDate;
@@ -678,6 +694,53 @@ export async function updateTaskAction(
   }
   refresh();
   return { success: 'Task updated.' };
+}
+
+export async function toggleTaskOccurrenceAction(
+  _: LifeActionState,
+  form: FormData,
+): Promise<LifeActionState> {
+  const userId = (await requireUser()).id;
+  const parsed = z
+    .object({
+      id: z.uuid(),
+      date: z.iso.date(),
+      completed: z.enum(['yes', 'no']),
+    })
+    .safeParse({ id: form.get('id'), date: form.get('date'), completed: form.get('completed') });
+  if (!parsed.success) return invalid(parsed.error);
+  const [task] = await db
+    .select()
+    .from(tasks)
+    .where(and(eq(tasks.userId, userId), eq(tasks.id, parsed.data.id)))
+    .limit(1);
+  if (
+    !task ||
+    task.status === 'cancelled' ||
+    task.recurrence === 'once' ||
+    !taskOccursOn(task, parsed.data.date)
+  )
+    return fail('This task is not scheduled for that day.');
+  if (parsed.data.completed === 'yes') {
+    await db
+      .insert(taskCompletions)
+      .values({ userId, taskId: task.id, date: parsed.data.date })
+      .onConflictDoNothing();
+  } else {
+    await db
+      .delete(taskCompletions)
+      .where(
+        and(
+          eq(taskCompletions.userId, userId),
+          eq(taskCompletions.taskId, task.id),
+          eq(taskCompletions.date, parsed.data.date),
+        ),
+      );
+  }
+  refresh();
+  return {
+    success: parsed.data.completed === 'yes' ? 'Occurrence completed.' : 'Occurrence reopened.',
+  };
 }
 
 export async function managePriorityAction(

@@ -3,7 +3,8 @@ import { ArrowLeft, ArrowRight, ChevronDown } from 'lucide-react';
 import { z } from 'zod';
 import { requireUser } from '@/lib/auth/session';
 import { getUserSettings } from '@/lib/dal/user-settings';
-import { getTasks } from '@/lib/dal/life';
+import { getTasks, getTaskCompletionKeys } from '@/lib/dal/life';
+import { taskOccurrences } from '@/lib/planning/task-recurrence';
 import { getTodayInTimezone, toDateString } from '@/lib/utils/date';
 import { weekStart } from '@/lib/analytics/habit-month-progress';
 import { addCalendarDays } from '@/lib/planning/time-blocks';
@@ -28,7 +29,8 @@ export default async function WeekPage({
   const end = addCalendarDays(start, 6);
   const dates = Array.from({ length: 7 }, (_, i) => addCalendarDays(start, i));
   const tasks = await getTasks(user.id);
-  const weekTasks = tasks.filter(
+  const completed = await getTaskCompletionKeys(user.id, start, end);
+  const weekTasks = taskOccurrences(tasks, start, end, completed).filter(
     (task) =>
       task.scheduledDate &&
       task.scheduledDate >= start &&
@@ -38,7 +40,10 @@ export default async function WeekPage({
   const completedTasks = weekTasks.filter((task) => task.status === 'done').length;
   const isCurrentWeek = start === weekStart(today, settings.weekStartsOn);
   const unplannedTasks = tasks.filter(
-    (task) => !task.scheduledDate && ['todo', 'in_progress'].includes(task.status),
+    (task) =>
+      task.recurrence === 'once' &&
+      !task.scheduledDate &&
+      ['todo', 'in_progress'].includes(task.status),
   );
   const dateLabel = (date: string) =>
     new Intl.DateTimeFormat('en', {
@@ -253,6 +258,7 @@ export default async function WeekPage({
                         title: task.title,
                         area: task.area,
                         status: task.status,
+                        recurrence: task.recurrence,
                       }}
                       date={date}
                       weekStart={start}
