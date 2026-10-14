@@ -30,7 +30,7 @@ export default async function WeekPage({
   const dates = Array.from({ length: 7 }, (_, i) => addCalendarDays(start, i));
   const tasks = await getTasks(user.id);
   const completed = await getTaskCompletionKeys(user.id, start, end);
-  const weekTasks = taskOccurrences(tasks, start, end, completed).filter(
+  const weekTasks = taskOccurrences(tasks, start, end, completed, settings.timezone).filter(
     (task) =>
       task.scheduledDate &&
       task.scheduledDate >= start &&

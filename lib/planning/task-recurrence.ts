@@ -1,11 +1,15 @@
 import type { tasks } from '@/lib/db/schema';
 import { addCalendarDays } from '@/lib/planning/time-blocks';
+import { formatInTimeZone } from 'date-fns-tz';
 
 export type Task = typeof tasks.$inferSelect;
 export type TaskOccurrence = Task & { occurrenceDate?: string };
 
 export function occursOn(task: Task, date: string): boolean {
-  if (task.recurrence === 'once') return task.scheduledDate === date;
+  if (task.recurrence === 'once')
+    return Boolean(
+      task.scheduledDate && date >= task.scheduledDate && (!task.dueDate || date <= task.dueDate),
+    );
   if (!task.scheduledDate || !task.dueDate || date < task.scheduledDate || date > task.dueDate)
     return false;
   if (task.recurrence === 'daily') return true;
@@ -19,13 +23,28 @@ export function taskOccurrences(
   start: string,
   end: string,
   completed: ReadonlySet<string>,
+  timeZone = 'UTC',
 ): TaskOccurrence[] {
   const occurrences: TaskOccurrence[] = [];
   for (const task of source) {
     if (task.status === 'cancelled') continue;
     if (task.recurrence === 'once') {
-      if (task.scheduledDate && task.scheduledDate >= start && task.scheduledDate <= end)
-        occurrences.push(task);
+      const completedOn =
+        task.status === 'done'
+          ? task.completedAt
+            ? formatInTimeZone(task.completedAt, timeZone, 'yyyy-MM-dd')
+            : task.scheduledDate
+          : null;
+      for (let date = start; date <= end; date = addCalendarDays(date, 1)) {
+        if (!occursOn(task, date) || (completedOn && date !== completedOn)) continue;
+        occurrences.push({
+          ...task,
+          scheduledDate: date,
+          occurrenceDate: date,
+          dailyPriority: date === task.scheduledDate ? task.dailyPriority : null,
+          status: task.status,
+        });
+      }
       continue;
     }
     for (let date = start; date <= end; date = addCalendarDays(date, 1)) {

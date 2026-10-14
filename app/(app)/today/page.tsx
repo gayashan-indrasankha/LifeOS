@@ -85,7 +85,7 @@ export default async function TodayPage({
     ]);
   const latestWeight = weights[0] ?? null;
   const completedTasks = await getTaskCompletionKeys(user.id, date, date);
-  const todayOccurrences = taskOccurrences(allTasks, date, date, completedTasks);
+  const todayOccurrences = taskOccurrences(allTasks, date, date, completedTasks, settings.timezone);
   const todayWeight = latestWeight?.date === date ? latestWeight : null;
   const mode = dayPlan?.mode === 'minimum' || dayPlan?.mode === 'reduced' ? dayPlan.mode : 'normal';
   const selected = allTasks

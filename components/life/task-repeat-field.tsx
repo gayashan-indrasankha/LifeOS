@@ -22,7 +22,7 @@ export function TaskRepeatField({
           onChange={(event) => setRepeat(event.target.value)}
           className="mt-1.5 min-h-11 w-full rounded-lg border bg-background px-3 font-normal"
         >
-          <option value="once">One time</option>
+          <option value="once">Complete once</option>
           <option value="daily">Every day</option>
           <option value="weekly">Selected weekdays</option>
         </select>
@@ -52,6 +52,12 @@ export function TaskRepeatField({
       {repeat !== 'once' && (
         <p className="text-xs font-normal text-muted-foreground">
           Each scheduled day has its own completion. Start and end dates are required.
+        </p>
+      )}
+      {repeat === 'once' && (
+        <p className="text-xs font-normal text-muted-foreground">
+          Shows each day from the start date until you mark it done once, stopping at the end date
+          if set.
         </p>
       )}
     </div>

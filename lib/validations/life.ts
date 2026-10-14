@@ -61,6 +61,17 @@ export const TaskSchema = z
     isMilestone: z.boolean(),
   })
   .superRefine((task, ctx) => {
+    if (
+      task.recurrence === 'once' &&
+      task.scheduledDate &&
+      task.dueDate &&
+      task.dueDate < task.scheduledDate
+    )
+      ctx.addIssue({
+        code: 'custom',
+        path: ['dueDate'],
+        message: 'End date must be on or after the start date.',
+      });
     if (task.recurrence !== 'once') {
       if (!task.scheduledDate || !task.dueDate || task.dueDate < task.scheduledDate)
         ctx.addIssue({
