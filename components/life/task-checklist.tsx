@@ -1,3 +1,5 @@
+import { ChevronDown } from 'lucide-react';
+
 import { ActionForm } from '@/components/life/action-form';
 import { toggleTaskChecklistItemAction } from '@/lib/actions/life-actions';
 import { checklistActiveOn, readChecklist } from '@/lib/planning/task-checklist';
@@ -20,29 +22,32 @@ export function TaskChecklist({
   const done = items.filter((item) => item.done).length;
   const active = checklistActiveOn(task, today);
   return (
-    <section
-      aria-label="Task progress checklist"
-      className="mt-4 rounded-xl border bg-background p-3"
-    >
-      <div className="flex items-center justify-between gap-3 text-sm font-semibold">
-        <span>Preparation progress</span>
-        <span className="tabular-nums">
-          {done}/{items.length}
+    <details className="group mt-4 rounded-xl border bg-background p-3">
+      <summary className="cursor-pointer list-none rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
+        <span className="flex items-center gap-3 text-sm font-semibold">
+          <span className="flex-1">Preparation progress</span>
+          <span className="tabular-nums">
+            {done}/{items.length}
+          </span>
+          <ChevronDown
+            aria-hidden="true"
+            className="size-4 shrink-0 transition-transform group-open:rotate-180"
+          />
         </span>
-      </div>
-      <div
-        role="progressbar"
-        aria-label="Checklist progress"
-        aria-valuemin={0}
-        aria-valuemax={items.length}
-        aria-valuenow={done}
-        className="mt-2 h-2 overflow-hidden rounded-full bg-muted"
-      >
-        <div
-          className="h-full rounded-full bg-primary"
-          style={{ width: `${(done / items.length) * 100}%` }}
-        />
-      </div>
+        <span
+          role="progressbar"
+          aria-label="Checklist progress"
+          aria-valuemin={0}
+          aria-valuemax={items.length}
+          aria-valuenow={done}
+          className="mt-2 block h-2 overflow-hidden rounded-full bg-muted"
+        >
+          <span
+            className="block h-full rounded-full bg-primary"
+            style={{ width: `${(done / items.length) * 100}%` }}
+          />
+        </span>
+      </summary>
       <ul className="mt-2 space-y-1">
         {items.map((item) => (
           <li key={item.id}>
@@ -78,6 +83,6 @@ export function TaskChecklist({
           Available from {task.scheduledDate} through {task.dueDate}.
         </p>
       )}
-    </section>
+    </details>
   );
 }
