@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useRef, useState, type ReactNode } from 'react';
+import { LoaderCircle } from 'lucide-react';
 import type { LifeActionState } from '@/lib/actions/life-actions';
 
 export function ActionForm({
@@ -9,6 +10,7 @@ export function ActionForm({
   className = '',
   submitLabel = 'Save',
   submitAriaLabel,
+  pendingSpinner = false,
   previewAction,
   previewLabel = 'Check conflicts',
   showSuccess = true,
@@ -21,6 +23,7 @@ export function ActionForm({
   className?: string;
   submitLabel?: string;
   submitAriaLabel?: string;
+  pendingSpinner?: boolean;
   previewAction?: (state: LifeActionState, form: FormData) => Promise<LifeActionState>;
   previewLabel?: string;
   showSuccess?: boolean;
@@ -55,10 +58,21 @@ export function ActionForm({
     <button
       type="submit"
       aria-label={submitAriaLabel}
+      aria-busy={pending}
       disabled={pending || submitDisabled}
       className={`inline-flex min-h-10 items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 ${successConfirmation ? 'min-w-32' : ''} ${buttonVariant === 'secondary' ? 'border border-border bg-background text-foreground hover:bg-muted' : buttonVariant === 'danger' ? 'bg-destructive text-destructive-foreground hover:opacity-90' : 'bg-primary text-primary-foreground hover:opacity-90'}`}
     >
-      {pending ? 'Saving…' : submitLabel}
+      {pending ? (
+        pendingSpinner ? (
+          <span aria-hidden="true" className="inline-flex animate-spin">
+            <LoaderCircle className="size-4" />
+          </span>
+        ) : (
+          'Saving…'
+        )
+      ) : (
+        submitLabel
+      )}
     </button>
   );
   return (

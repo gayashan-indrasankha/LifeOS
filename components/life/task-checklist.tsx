@@ -51,6 +51,7 @@ export function TaskChecklist({
                 action={toggleTaskChecklistItemAction}
                 submitLabel={item.done ? '✓' : '○'}
                 submitAriaLabel={`${item.done ? 'Reopen' : 'Complete'} ${item.text}`}
+                pendingSpinner
                 showSuccess={false}
                 buttonVariant="secondary"
                 className="flex items-center gap-2 [&>button]:order-first [&>button]:size-8 [&>button]:shrink-0 [&>button]:rounded-full [&>button]:p-0 [&>[role=alert]]:basis-full"
