@@ -4,17 +4,29 @@ import { useId, useState } from 'react';
 import { CalendarDays, CheckCircle2, ChevronDown, Circle } from 'lucide-react';
 import { ActionForm } from '@/components/life/action-form';
 import { toggleTaskOccurrenceAction, updateTaskAction } from '@/lib/actions/life-actions';
+import { TaskChecklist } from '@/components/life/task-checklist';
 
 export function WeekTaskItem({
   task,
   date,
   weekStart,
   weekEnd,
+  today,
 }: {
-  task: { id: string; title: string; area: string; status: string; recurrence?: string };
+  task: {
+    id: string;
+    title: string;
+    area: string;
+    status: string;
+    recurrence?: string;
+    checklist: string | null;
+    scheduledDate: string | null;
+    dueDate: string | null;
+  };
   date: string;
   weekStart: string;
   weekEnd?: string;
+  today: string;
 }) {
   const [editingDay, setEditingDay] = useState(false);
   const editorId = useId();
@@ -85,6 +97,11 @@ export function WeekTaskItem({
           </ActionForm>
         </div>
       </div>
+      {task.checklist && (
+        <div className="border-t px-3 pb-3 sm:px-4">
+          <TaskChecklist task={task} today={today} />
+        </div>
+      )}
       {!recurring && editingDay && (
         <div id={editorId} className="border-t bg-muted/20 px-3 py-3 sm:px-4">
           <ActionForm

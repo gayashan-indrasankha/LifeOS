@@ -5,6 +5,7 @@ import { managePriorityAction, updateTaskAction } from '@/lib/actions/life-actio
 import { ActionForm } from './action-form';
 import { PriorityPicker, type BacklogChoice } from './priority-picker';
 import { focusedDayTasks } from '@/lib/planning/today-focus';
+import { TaskChecklist } from './task-checklist';
 
 type Task = typeof tasks.$inferSelect;
 
@@ -88,6 +89,7 @@ export function PriorityPanel({
                     />
                   </ActionForm>
                 </div>
+                <TaskChecklist task={task} today={date} />
                 <details className="group mt-4 border-t pt-3 text-sm">
                   <summary className="flex min-h-10 w-fit cursor-pointer list-none items-center gap-1.5 rounded-md py-1 font-medium text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
                     Task options

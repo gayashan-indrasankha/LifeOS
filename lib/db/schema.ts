@@ -372,6 +372,7 @@ export const tasks = pgTable(
     title: varchar('title', { length: 160 }).notNull(),
     templateKey: varchar('template_key', { length: 100 }),
     details: text('details'),
+    checklist: text('checklist'),
     area: varchar('area', { length: 80 }).notNull().default('Personal Development'),
     status: varchar('status', { length: 20 }).notNull().default('todo'),
     priority: smallint('priority').notNull().default(2),

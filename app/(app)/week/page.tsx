@@ -258,10 +258,15 @@ export default async function WeekPage({
                         title: task.title,
                         area: task.area,
                         status: task.status,
+                        checklist: task.checklist,
+                        scheduledDate:
+                          tasks.find((item) => item.id === task.id)?.scheduledDate ?? null,
+                        dueDate: task.dueDate,
                         recurrence: task.recurrence,
                       }}
                       date={date}
                       weekStart={start}
+                      today={today}
                       weekEnd={end}
                     />
                   ))}

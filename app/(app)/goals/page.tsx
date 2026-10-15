@@ -19,6 +19,8 @@ import { setGoalArchiveAction } from '@/lib/actions/life-actions';
 import { GoalWeightTrend } from '@/components/life/goal-weight-trend';
 import { ProjectsTab } from '@/components/life/projects-tab';
 import { TaskRepeatField } from '@/components/life/task-repeat-field';
+import { TaskChecklistField } from '@/components/life/task-checklist-field';
+import { TaskChecklist } from '@/components/life/task-checklist';
 import { occursOn as taskOccursOn } from '@/lib/planning/task-recurrence';
 import { weightTrend } from '@/lib/evidence/summary';
 import { LIFE_AREAS, normalizeLifeArea } from '@/lib/life-areas';
@@ -471,6 +473,7 @@ export default async function GoalsPage({
                     />
                   </label>
                   <TaskRepeatField />
+                  <TaskChecklistField />
                   <label className="flex min-h-11 items-center gap-2 text-sm font-medium">
                     <input type="checkbox" name="isMilestone" /> Project milestone
                   </label>
@@ -570,6 +573,7 @@ export default async function GoalsPage({
                           </ActionForm>
                         )}
                       </div>
+                      <TaskChecklist task={task} today={today} />
                       <div className="mt-4 grid grid-cols-[1fr_auto] items-start gap-2 border-t pt-3">
                         <details className="group min-w-0 open:col-span-2">
                           <summary className="inline-flex min-h-9 cursor-pointer list-none items-center gap-2 rounded-lg bg-primary/5 px-3 text-sm font-medium text-primary hover:bg-primary/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
@@ -687,6 +691,7 @@ export default async function GoalsPage({
                               />
                             </label>
                             <TaskRepeatField initial={task.recurrence} weekdays={task.weekdays} />
+                            <TaskChecklistField initial={task.checklist} />
                             <label className="flex min-h-11 items-center gap-2 text-sm font-medium">
                               <input
                                 type="checkbox"

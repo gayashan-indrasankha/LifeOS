@@ -38,6 +38,7 @@ import {
 import { scheduledInstant, statusTimeError } from '@/lib/planning/occurrence-time';
 import { planPriorityOrder } from '@/lib/planning/priorities';
 import { occursOn as taskOccursOn } from '@/lib/planning/task-recurrence';
+import { checklistActiveOn, checklistFromForm, readChecklist } from '@/lib/planning/task-checklist';
 import {
   BlockSchema,
   DayModeSchema,
@@ -354,6 +355,13 @@ export async function createTaskAction(
     isMilestone: checked(form, 'isMilestone'),
   });
   if (!parsed.success) return invalid(parsed.error);
+  const checklist = checklistFromForm(
+    checked(form, 'checklistEnabled'),
+    nullable(form, 'checklistItems'),
+  );
+  if (checklist.error) return fail(checklist.error);
+  if (checklist.items.length && (!parsed.data.scheduledDate || !parsed.data.dueDate))
+    return fail('Checklist tasks need a start date and an end date.');
   const { goalId, projectId } = parsed.data;
   if (
     goalId &&
@@ -377,7 +385,11 @@ export async function createTaskAction(
     )[0]
   )
     return fail('Project not found.');
-  await db.insert(tasks).values({ userId, ...parsed.data });
+  await db.insert(tasks).values({
+    userId,
+    ...parsed.data,
+    checklist: checklist.items.length ? JSON.stringify(checklist.items) : null,
+  });
   refresh();
   return { success: 'Task added.' };
 }
@@ -526,6 +538,13 @@ export async function editTaskAction(_: LifeActionState, form: FormData): Promis
       .limit(1)
   )[0];
   if (!current) return fail('Task not found.');
+  const draftChecklist = checklistFromForm(
+    checked(form, 'checklistEnabled'),
+    nullable(form, 'checklistItems'),
+  );
+  if (draftChecklist.error) return fail(draftChecklist.error);
+  if (draftChecklist.items.length && (!parsed.data.scheduledDate || !parsed.data.dueDate))
+    return fail('Checklist tasks need a start date and an end date.');
   if (
     parsed.data.goalId &&
     !(
@@ -557,6 +576,11 @@ export async function editTaskAction(_: LifeActionState, form: FormData): Promis
         .where(and(eq(tasks.userId, userId), eq(tasks.id, id.data)))
         .limit(1);
       if (!locked) throw new Error('missing');
+      const checklist = checklistFromForm(
+        checked(form, 'checklistEnabled'),
+        nullable(form, 'checklistItems'),
+        readChecklist(locked.checklist),
+      );
       const changedDate =
         parsed.data.scheduledDate !== locked.scheduledDate ||
         parsed.data.recurrence !== locked.recurrence;
@@ -564,6 +588,7 @@ export async function editTaskAction(_: LifeActionState, form: FormData): Promis
         .update(tasks)
         .set({
           ...parsed.data,
+          checklist: checklist.items.length ? JSON.stringify(checklist.items) : null,
           ...(parsed.data.recurrence !== 'once' ? { status: 'todo', completedAt: null } : {}),
           ...(changedDate ? { dailyPriority: null } : {}),
           updatedAt: new Date(),
@@ -741,6 +766,40 @@ export async function toggleTaskOccurrenceAction(
   return {
     success: parsed.data.completed === 'yes' ? 'Occurrence completed.' : 'Occurrence reopened.',
   };
+}
+
+export async function toggleTaskChecklistItemAction(
+  _: LifeActionState,
+  form: FormData,
+): Promise<LifeActionState> {
+  const userId = (await requireUser()).id;
+  const parsed = z
+    .object({ taskId: z.uuid(), itemId: z.uuid(), done: z.enum(['yes', 'no']) })
+    .safeParse({ taskId: form.get('taskId'), itemId: form.get('itemId'), done: form.get('done') });
+  if (!parsed.success) return invalid(parsed.error);
+  const settings = await getUserSettings(userId);
+  const today = toDateString(getTodayInTimezone(settings.timezone));
+  const result = await db.transaction(async (tx) => {
+    await tx.select({ id: users.id }).from(users).where(eq(users.id, userId)).for('update');
+    const [task] = await tx
+      .select()
+      .from(tasks)
+      .where(and(eq(tasks.userId, userId), eq(tasks.id, parsed.data.taskId)))
+      .limit(1);
+    if (!task || !checklistActiveOn(task, today)) return 'unavailable';
+    const items = readChecklist(task.checklist);
+    const item = items.find((entry) => entry.id === parsed.data.itemId);
+    if (!item) return 'unavailable';
+    item.done = parsed.data.done === 'yes';
+    await tx
+      .update(tasks)
+      .set({ checklist: JSON.stringify(items), updatedAt: new Date() })
+      .where(and(eq(tasks.userId, userId), eq(tasks.id, task.id)));
+    return 'saved';
+  });
+  if (result !== 'saved') return fail('This checklist item is unavailable today.');
+  refresh();
+  return { success: 'Checklist updated.' };
 }
 
 export async function managePriorityAction(

@@ -8,6 +8,7 @@ export function ActionForm({
   children,
   className = '',
   submitLabel = 'Save',
+  submitAriaLabel,
   previewAction,
   previewLabel = 'Check conflicts',
   showSuccess = true,
@@ -19,6 +20,7 @@ export function ActionForm({
   children: ReactNode;
   className?: string;
   submitLabel?: string;
+  submitAriaLabel?: string;
   previewAction?: (state: LifeActionState, form: FormData) => Promise<LifeActionState>;
   previewLabel?: string;
   showSuccess?: boolean;
@@ -52,6 +54,7 @@ export function ActionForm({
   const submitButton = (
     <button
       type="submit"
+      aria-label={submitAriaLabel}
       disabled={pending || submitDisabled}
       className={`inline-flex min-h-10 items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 ${successConfirmation ? 'min-w-32' : ''} ${buttonVariant === 'secondary' ? 'border border-border bg-background text-foreground hover:bg-muted' : buttonVariant === 'danger' ? 'bg-destructive text-destructive-foreground hover:opacity-90' : 'bg-primary text-primary-foreground hover:opacity-90'}`}
     >

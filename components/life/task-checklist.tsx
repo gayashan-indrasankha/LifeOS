@@ -1,0 +1,82 @@
+import { ActionForm } from '@/components/life/action-form';
+import { toggleTaskChecklistItemAction } from '@/lib/actions/life-actions';
+import { checklistActiveOn, readChecklist } from '@/lib/planning/task-checklist';
+
+export function TaskChecklist({
+  task,
+  today,
+}: {
+  task: {
+    id: string;
+    checklist: string | null;
+    scheduledDate: string | null;
+    dueDate: string | null;
+    status: string;
+  };
+  today: string;
+}) {
+  const items = readChecklist(task.checklist);
+  if (!items.length) return null;
+  const done = items.filter((item) => item.done).length;
+  const active = checklistActiveOn(task, today);
+  return (
+    <section
+      aria-label="Task progress checklist"
+      className="mt-4 rounded-xl border bg-background p-3"
+    >
+      <div className="flex items-center justify-between gap-3 text-sm font-semibold">
+        <span>Preparation progress</span>
+        <span className="tabular-nums">
+          {done}/{items.length}
+        </span>
+      </div>
+      <div
+        role="progressbar"
+        aria-label="Checklist progress"
+        aria-valuemin={0}
+        aria-valuemax={items.length}
+        aria-valuenow={done}
+        className="mt-2 h-2 overflow-hidden rounded-full bg-muted"
+      >
+        <div
+          className="h-full rounded-full bg-primary"
+          style={{ width: `${(done / items.length) * 100}%` }}
+        />
+      </div>
+      <ul className="mt-2 space-y-1">
+        {items.map((item) => (
+          <li key={item.id}>
+            {active ? (
+              <ActionForm
+                action={toggleTaskChecklistItemAction}
+                submitLabel={item.done ? '✓' : '○'}
+                submitAriaLabel={`${item.done ? 'Reopen' : 'Complete'} ${item.text}`}
+                showSuccess={false}
+                buttonVariant="secondary"
+                className="flex items-center gap-2 [&>button]:order-first [&>button]:size-8 [&>button]:shrink-0 [&>button]:rounded-full [&>button]:p-0 [&>[role=alert]]:basis-full"
+              >
+                <input type="hidden" name="taskId" value={task.id} />
+                <input type="hidden" name="itemId" value={item.id} />
+                <input type="hidden" name="done" value={item.done ? 'no' : 'yes'} />
+                <span
+                  className={`text-sm ${item.done ? 'text-muted-foreground line-through' : ''}`}
+                >
+                  {item.text}
+                </span>
+              </ActionForm>
+            ) : (
+              <p className="py-1 text-sm text-muted-foreground">
+                {item.done ? '✓' : '○'} {item.text}
+              </p>
+            )}
+          </li>
+        ))}
+      </ul>
+      {!active && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Available from {task.scheduledDate} through {task.dueDate}.
+        </p>
+      )}
+    </section>
+  );
+}

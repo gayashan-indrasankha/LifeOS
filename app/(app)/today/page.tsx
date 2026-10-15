@@ -289,10 +289,15 @@ export default async function TodayPage({
                     title: task.title,
                     area: task.area,
                     status: task.status,
+                    checklist: task.checklist,
+                    scheduledDate:
+                      allTasks.find((item) => item.id === task.id)?.scheduledDate ?? null,
+                    dueDate: task.dueDate,
                     recurrence: task.recurrence,
                   }}
                   date={date}
                   weekStart={date}
+                  today={date}
                 />
               ))}
             </ul>
