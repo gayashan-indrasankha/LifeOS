@@ -65,6 +65,7 @@ export function TaskChecklist({
   const items = readChecklist(task.checklist);
   if (!items.length) return null;
   const done = items.filter((item) => item.done).length;
+  const percentage = Math.round((done / items.length) * 1000) / 10;
   const active = checklistActiveOn(task, today);
   const groups = new Map<string, ChecklistItem[]>();
   for (const item of items) {
@@ -76,10 +77,11 @@ export function TaskChecklist({
   return (
     <details className="group mt-4 rounded-xl border bg-background p-3">
       <summary className="cursor-pointer list-none rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
-        <span className="flex items-center gap-3 text-sm font-semibold">
+        <span className="flex items-center gap-2 text-sm font-semibold">
           <span className="flex-1">Preparation progress</span>
-          <span className="tabular-nums">
+          <span className="shrink-0 whitespace-nowrap tabular-nums">
             {done}/{items.length}
+            <span className="ml-1 text-xs text-muted-foreground">({percentage}%)</span>
           </span>
           <ChevronDown
             aria-hidden="true"
@@ -92,6 +94,7 @@ export function TaskChecklist({
           aria-valuemin={0}
           aria-valuemax={items.length}
           aria-valuenow={done}
+          aria-valuetext={`${percentage}% complete`}
           className="mt-2 block h-2 overflow-hidden rounded-full bg-muted"
         >
           <span
