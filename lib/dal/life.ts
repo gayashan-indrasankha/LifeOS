@@ -8,6 +8,7 @@ import {
   subjectAssessments,
   subjects,
   tasks,
+  taskChecklistCompletions,
   taskCompletions,
   timeBlockExceptions,
   timeBlockRevisions,
@@ -41,6 +42,28 @@ export const getTaskCompletionKeys = async (userId: string, start: string, end: 
       ),
     );
   return new Set(rows.map((row) => `${row.taskId}:${row.date}`));
+};
+export const getTaskChecklistDoneByDate = async (userId: string, start: string, end: string) => {
+  const rows = await db
+    .select({
+      taskId: taskChecklistCompletions.taskId,
+      itemId: taskChecklistCompletions.itemId,
+      date: taskChecklistCompletions.date,
+    })
+    .from(taskChecklistCompletions)
+    .where(
+      and(
+        eq(taskChecklistCompletions.userId, userId),
+        gte(taskChecklistCompletions.date, start),
+        lte(taskChecklistCompletions.date, end),
+      ),
+    );
+  const byTaskDate: Record<string, string[]> = {};
+  for (const row of rows) {
+    const key = `${row.taskId}:${row.date}`;
+    (byTaskDate[key] ??= []).push(row.itemId);
+  }
+  return byTaskDate;
 };
 export const getSubjects = (userId: string) =>
   db.select().from(subjects).where(eq(subjects.userId, userId)).orderBy(asc(subjects.slot));

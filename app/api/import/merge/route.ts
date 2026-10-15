@@ -3,7 +3,7 @@ import { getCurrentUser } from '@/lib/auth/session';
 import { backupTables } from '@/lib/backup/format';
 import { BackupRequestError, readBackupRequest } from '@/lib/backup/request';
 import { db } from '@/lib/db';
-import { habits, taskCompletions, userSettings } from '@/lib/db/schema';
+import { habits, taskChecklistCompletions, taskCompletions, userSettings } from '@/lib/db/schema';
 
 function sameValue(a: unknown, b: unknown) {
   const normalize = (value: unknown) => (value instanceof Date ? value.toISOString() : value);
@@ -84,6 +84,34 @@ export async function POST(request: Request) {
               await tx
                 .insert(taskCompletions)
                 .values({ ...row, userId: user.id } as typeof taskCompletions.$inferInsert);
+              added++;
+            }
+          }
+          continue;
+        }
+        if (name === 'taskChecklistCompletions') {
+          for (const row of rows) {
+            const [existing] = await tx
+              .select()
+              .from(taskChecklistCompletions)
+              .where(
+                and(
+                  eq(taskChecklistCompletions.userId, user.id),
+                  eq(taskChecklistCompletions.taskId, row.taskId as string),
+                  eq(taskChecklistCompletions.itemId, row.itemId as string),
+                  eq(taskChecklistCompletions.date, row.date as string),
+                ),
+              )
+              .limit(1);
+            if (existing) {
+              if (!sameValue(existing.completedAt, row.completedAt))
+                throw new Error('Conflicting checklist completion record');
+              alreadyPresent++;
+            } else {
+              await tx.insert(taskChecklistCompletions).values({
+                ...row,
+                userId: user.id,
+              } as typeof taskChecklistCompletions.$inferInsert);
               added++;
             }
           }

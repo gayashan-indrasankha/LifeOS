@@ -16,6 +16,7 @@ import {
   subjectAssessments,
   subjects,
   tasks,
+  taskChecklistCompletions,
   taskCompletions,
   timeBlockExceptions,
   timeBlockRevisions,
@@ -362,6 +363,9 @@ export async function createTaskAction(
   if (checklist.error) return fail(checklist.error);
   if (checklist.items.length && (!parsed.data.scheduledDate || !parsed.data.dueDate))
     return fail('Checklist tasks need a start date and an end date.');
+  const checklistResetDaily = checked(form, 'checklistResetDaily');
+  if (checklistResetDaily && (parsed.data.recurrence !== 'daily' || !checklist.items.length))
+    return fail('Daily checklist reset needs an every-day task with checklist items.');
   const { goalId, projectId } = parsed.data;
   if (
     goalId &&
@@ -389,6 +393,7 @@ export async function createTaskAction(
     userId,
     ...parsed.data,
     checklist: checklist.items.length ? JSON.stringify(checklist.items) : null,
+    checklistResetDaily,
   });
   refresh();
   return { success: 'Task added.' };
@@ -545,6 +550,9 @@ export async function editTaskAction(_: LifeActionState, form: FormData): Promis
   if (draftChecklist.error) return fail(draftChecklist.error);
   if (draftChecklist.items.length && (!parsed.data.scheduledDate || !parsed.data.dueDate))
     return fail('Checklist tasks need a start date and an end date.');
+  const checklistResetDaily = checked(form, 'checklistResetDaily');
+  if (checklistResetDaily && (parsed.data.recurrence !== 'daily' || !draftChecklist.items.length))
+    return fail('Daily checklist reset needs an every-day task with checklist items.');
   if (
     parsed.data.goalId &&
     !(
@@ -589,6 +597,7 @@ export async function editTaskAction(_: LifeActionState, form: FormData): Promis
         .set({
           ...parsed.data,
           checklist: checklist.items.length ? JSON.stringify(checklist.items) : null,
+          checklistResetDaily,
           ...(parsed.data.recurrence !== 'once' ? { status: 'todo', completedAt: null } : {}),
           ...(changedDate ? { dailyPriority: null } : {}),
           updatedAt: new Date(),
@@ -790,11 +799,31 @@ export async function toggleTaskChecklistItemAction(
     const items = readChecklist(task.checklist);
     const item = items.find((entry) => entry.id === parsed.data.itemId);
     if (!item) return 'unavailable';
-    item.done = parsed.data.done === 'yes';
-    await tx
-      .update(tasks)
-      .set({ checklist: JSON.stringify(items), updatedAt: new Date() })
-      .where(and(eq(tasks.userId, userId), eq(tasks.id, task.id)));
+    if (task.checklistResetDaily && task.recurrence === 'daily') {
+      if (parsed.data.done === 'yes') {
+        await tx
+          .insert(taskChecklistCompletions)
+          .values({ userId, taskId: task.id, itemId: item.id, date: today })
+          .onConflictDoNothing();
+      } else {
+        await tx
+          .delete(taskChecklistCompletions)
+          .where(
+            and(
+              eq(taskChecklistCompletions.userId, userId),
+              eq(taskChecklistCompletions.taskId, task.id),
+              eq(taskChecklistCompletions.itemId, item.id),
+              eq(taskChecklistCompletions.date, today),
+            ),
+          );
+      }
+    } else {
+      item.done = parsed.data.done === 'yes';
+      await tx
+        .update(tasks)
+        .set({ checklist: JSON.stringify(items), updatedAt: new Date() })
+        .where(and(eq(tasks.userId, userId), eq(tasks.id, task.id)));
+    }
     return 'saved';
   });
   if (result !== 'saved') return fail('This checklist item is unavailable today.');

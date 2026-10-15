@@ -3,7 +3,13 @@ import { ChevronDown, ListChecks, NotebookPen, Scale } from 'lucide-react';
 import { format } from 'date-fns';
 import { requireUser } from '@/lib/auth/session';
 import { getUserSettings } from '@/lib/dal/user-settings';
-import { getTasks, getDayPlan, getProjects, getTaskCompletionKeys } from '@/lib/dal/life';
+import {
+  getTasks,
+  getDayPlan,
+  getProjects,
+  getTaskCompletionKeys,
+  getTaskChecklistDoneByDate,
+} from '@/lib/dal/life';
 import { taskOccurrences } from '@/lib/planning/task-recurrence';
 import { getActiveHabitsByUser } from '@/lib/dal/habits';
 import { getEntriesByUserAndDateRange } from '@/lib/dal/habit-entries';
@@ -84,7 +90,10 @@ export default async function TodayPage({
         .limit(1),
     ]);
   const latestWeight = weights[0] ?? null;
-  const completedTasks = await getTaskCompletionKeys(user.id, date, date);
+  const [completedTasks, dailyChecklistDoneByDate] = await Promise.all([
+    getTaskCompletionKeys(user.id, date, date),
+    getTaskChecklistDoneByDate(user.id, date, date),
+  ]);
   const todayOccurrences = taskOccurrences(allTasks, date, date, completedTasks, settings.timezone);
   const todayWeight = latestWeight?.date === date ? latestWeight : null;
   const mode = dayPlan?.mode === 'minimum' || dayPlan?.mode === 'reduced' ? dayPlan.mode : 'normal';
@@ -270,7 +279,13 @@ export default async function TodayPage({
       )}
       <div className="space-y-5">
         <div id="today-priorities">
-          <PriorityPanel date={date} mode={mode} selected={selected} choices={backlogChoices} />
+          <PriorityPanel
+            date={date}
+            mode={mode}
+            selected={selected}
+            choices={backlogChoices}
+            dailyChecklistDoneByDate={dailyChecklistDoneByDate}
+          />
         </div>
         {otherTodayTasks.length > 0 && (
           <section id="today-other-tasks" className="rounded-2xl border bg-card p-5">
@@ -290,6 +305,7 @@ export default async function TodayPage({
                     area: task.area,
                     status: task.status,
                     checklist: task.checklist,
+                    checklistResetDaily: task.checklistResetDaily,
                     scheduledDate:
                       allTasks.find((item) => item.id === task.id)?.scheduledDate ?? null,
                     dueDate: task.dueDate,
@@ -298,6 +314,7 @@ export default async function TodayPage({
                   date={date}
                   weekStart={date}
                   today={date}
+                  dailyDoneIds={dailyChecklistDoneByDate[`${task.id}:${date}`] ?? []}
                 />
               ))}
             </ul>

@@ -1,6 +1,13 @@
 import Link from 'next/link';
 import { requireUser } from '@/lib/auth/session';
-import { getGoals, getMetrics, getProjects, getTasks, getTaskCompletionKeys } from '@/lib/dal/life';
+import {
+  getGoals,
+  getMetrics,
+  getProjects,
+  getTasks,
+  getTaskCompletionKeys,
+  getTaskChecklistDoneByDate,
+} from '@/lib/dal/life';
 import { getUserSettings } from '@/lib/dal/user-settings';
 import { getTodayInTimezone, toDateString } from '@/lib/utils/date';
 import {
@@ -19,7 +26,6 @@ import { setGoalArchiveAction } from '@/lib/actions/life-actions';
 import { GoalWeightTrend } from '@/components/life/goal-weight-trend';
 import { ProjectsTab } from '@/components/life/projects-tab';
 import { TaskRepeatField } from '@/components/life/task-repeat-field';
-import { TaskChecklistField } from '@/components/life/task-checklist-field';
 import { TaskChecklist } from '@/components/life/task-checklist';
 import { occursOn as taskOccursOn } from '@/lib/planning/task-recurrence';
 import { weightTrend } from '@/lib/evidence/summary';
@@ -46,7 +52,10 @@ export default async function GoalsPage({
     getUserSettings(userId),
   ]);
   const today = toDateString(getTodayInTimezone(settings.timezone));
-  const completedToday = await getTaskCompletionKeys(userId, today, today);
+  const [completedToday, dailyChecklistDoneByDate] = await Promise.all([
+    getTaskCompletionKeys(userId, today, today),
+    getTaskChecklistDoneByDate(userId, today, today),
+  ]);
   const activeTasks = tasks.filter((task) => !['done', 'cancelled'].includes(task.status));
   const inactiveTasks = tasks.filter((task) => ['done', 'cancelled'].includes(task.status));
   const activeGoals = goals.filter((goal) => !goal.archivedAt);
@@ -473,7 +482,6 @@ export default async function GoalsPage({
                     />
                   </label>
                   <TaskRepeatField />
-                  <TaskChecklistField />
                   <label className="flex min-h-11 items-center gap-2 text-sm font-medium">
                     <input type="checkbox" name="isMilestone" /> Project milestone
                   </label>
@@ -573,7 +581,11 @@ export default async function GoalsPage({
                           </ActionForm>
                         )}
                       </div>
-                      <TaskChecklist task={task} today={today} />
+                      <TaskChecklist
+                        task={task}
+                        today={today}
+                        dailyDoneIds={dailyChecklistDoneByDate[`${task.id}:${today}`] ?? []}
+                      />
                       <div className="mt-4 grid grid-cols-[1fr_auto] items-start gap-2 border-t pt-3">
                         <details className="group min-w-0 open:col-span-2">
                           <summary className="inline-flex min-h-9 cursor-pointer list-none items-center gap-2 rounded-lg bg-primary/5 px-3 text-sm font-medium text-primary hover:bg-primary/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
@@ -690,8 +702,12 @@ export default async function GoalsPage({
                                 className="mt-1.5 min-h-11 w-full rounded-lg border bg-background px-3 font-normal"
                               />
                             </label>
-                            <TaskRepeatField initial={task.recurrence} weekdays={task.weekdays} />
-                            <TaskChecklistField initial={task.checklist} />
+                            <TaskRepeatField
+                              initial={task.recurrence}
+                              weekdays={task.weekdays}
+                              checklist={task.checklist}
+                              checklistResetDaily={task.checklistResetDaily}
+                            />
                             <label className="flex min-h-11 items-center gap-2 text-sm font-medium">
                               <input
                                 type="checkbox"

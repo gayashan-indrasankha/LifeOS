@@ -373,6 +373,7 @@ export const tasks = pgTable(
     templateKey: varchar('template_key', { length: 100 }),
     details: text('details'),
     checklist: text('checklist'),
+    checklistResetDaily: boolean('checklist_reset_daily').notNull().default(false),
     area: varchar('area', { length: 80 }).notNull().default('Personal Development'),
     status: varchar('status', { length: 20 }).notNull().default('todo'),
     priority: smallint('priority').notNull().default(2),
@@ -420,6 +421,32 @@ export const taskCompletions = pgTable(
   },
   (t) => [
     unique('task_completions_user_task_date_unique').on(t.userId, t.taskId, t.date),
+    foreignKey({
+      columns: [t.userId, t.taskId],
+      foreignColumns: [tasks.userId, tasks.id],
+    }).onDelete('cascade'),
+  ],
+);
+
+export const taskChecklistCompletions = pgTable(
+  'task_checklist_completions',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    taskId: uuid('task_id').notNull(),
+    itemId: uuid('item_id').notNull(),
+    date: date('date').notNull(),
+    completedAt: timestamp('completed_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('task_checklist_completions_user_task_item_date_unique').on(
+      t.userId,
+      t.taskId,
+      t.itemId,
+      t.date,
+    ),
+    index('task_checklist_completions_user_date_idx').on(t.userId, t.date),
     foreignKey({
       columns: [t.userId, t.taskId],
       foreignColumns: [tasks.userId, tasks.id],

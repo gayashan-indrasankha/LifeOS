@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight, ChevronDown } from 'lucide-react';
 import { z } from 'zod';
 import { requireUser } from '@/lib/auth/session';
 import { getUserSettings } from '@/lib/dal/user-settings';
-import { getTasks, getTaskCompletionKeys } from '@/lib/dal/life';
+import { getTasks, getTaskCompletionKeys, getTaskChecklistDoneByDate } from '@/lib/dal/life';
 import { taskOccurrences } from '@/lib/planning/task-recurrence';
 import { getTodayInTimezone, toDateString } from '@/lib/utils/date';
 import { weekStart } from '@/lib/analytics/habit-month-progress';
@@ -29,7 +29,10 @@ export default async function WeekPage({
   const end = addCalendarDays(start, 6);
   const dates = Array.from({ length: 7 }, (_, i) => addCalendarDays(start, i));
   const tasks = await getTasks(user.id);
-  const completed = await getTaskCompletionKeys(user.id, start, end);
+  const [completed, dailyChecklistDoneByDate] = await Promise.all([
+    getTaskCompletionKeys(user.id, start, end),
+    getTaskChecklistDoneByDate(user.id, start, end),
+  ]);
   const weekTasks = taskOccurrences(tasks, start, end, completed, settings.timezone).filter(
     (task) =>
       task.scheduledDate &&
@@ -259,6 +262,7 @@ export default async function WeekPage({
                         area: task.area,
                         status: task.status,
                         checklist: task.checklist,
+                        checklistResetDaily: task.checklistResetDaily,
                         scheduledDate:
                           tasks.find((item) => item.id === task.id)?.scheduledDate ?? null,
                         dueDate: task.dueDate,
@@ -267,6 +271,7 @@ export default async function WeekPage({
                       date={date}
                       weekStart={start}
                       today={today}
+                      dailyDoneIds={dailyChecklistDoneByDate[`${task.id}:${date}`] ?? []}
                       weekEnd={end}
                     />
                   ))}

@@ -24,6 +24,7 @@ import {
   subjectTopics,
   subjects,
   tasks,
+  taskChecklistCompletions,
   taskCompletions,
   timeBlockExceptions,
   timeBlockRevisions,
@@ -48,6 +49,7 @@ export const backupTables = [
   ['projects', projects],
   ['tasks', tasks],
   ['taskCompletions', taskCompletions],
+  ['taskChecklistCompletions', taskChecklistCompletions],
   ['timeOffDays', timeOffDays],
   ['timeBlocks', timeBlocks],
   ['timeBlockRevisions', timeBlockRevisions],
@@ -103,7 +105,9 @@ export function parseBackup(value: unknown): ParsedBackup {
   for (const [name, table] of backupTables) {
     const section = value[name];
     if (
-      ((name === 'lifeOsSeedItems' && value.schemaVersion === 1) || name === 'taskCompletions') &&
+      ((name === 'lifeOsSeedItems' && value.schemaVersion === 1) ||
+        name === 'taskCompletions' ||
+        name === 'taskChecklistCompletions') &&
       section === undefined
     ) {
       rows[name] = [];

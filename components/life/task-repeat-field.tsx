@@ -1,15 +1,20 @@
 'use client';
 
 import { useState } from 'react';
+import { TaskChecklistField } from '@/components/life/task-checklist-field';
 
 const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 export function TaskRepeatField({
   initial = 'once',
   weekdays = null,
+  checklist = null,
+  checklistResetDaily = false,
 }: {
   initial?: string;
   weekdays?: string | null;
+  checklist?: string | null;
+  checklistResetDaily?: boolean;
 }) {
   const [repeat, setRepeat] = useState(initial);
   return (
@@ -60,6 +65,11 @@ export function TaskRepeatField({
           if set.
         </p>
       )}
+      <TaskChecklistField
+        initial={checklist}
+        initialResetDaily={checklistResetDaily}
+        recurrence={repeat}
+      />
     </div>
   );
 }

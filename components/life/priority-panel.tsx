@@ -14,11 +14,13 @@ export function PriorityPanel({
   mode,
   selected,
   choices,
+  dailyChecklistDoneByDate,
 }: {
   date: string;
   mode: 'normal' | 'reduced' | 'minimum';
   selected: Task[];
   choices: BacklogChoice[];
+  dailyChecklistDoneByDate: Record<string, string[]>;
 }) {
   const slots = [1, 2, 3].map((rank) => selected.find((task) => task.dailyPriority === rank));
   const visibleIds = new Set(focusedDayTasks(selected, mode).map((task) => task.id));
@@ -89,7 +91,11 @@ export function PriorityPanel({
                     />
                   </ActionForm>
                 </div>
-                <TaskChecklist task={task} today={date} />
+                <TaskChecklist
+                  task={task}
+                  today={date}
+                  dailyDoneIds={dailyChecklistDoneByDate[`${task.id}:${date}`] ?? []}
+                />
                 <details className="group mt-4 border-t pt-3 text-sm">
                   <summary className="flex min-h-10 w-fit cursor-pointer list-none items-center gap-1.5 rounded-md py-1 font-medium text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
                     Task options

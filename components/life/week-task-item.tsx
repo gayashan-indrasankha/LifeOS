@@ -12,14 +12,16 @@ export function WeekTaskItem({
   weekStart,
   weekEnd,
   today,
+  dailyDoneIds,
 }: {
   task: {
     id: string;
     title: string;
     area: string;
     status: string;
-    recurrence?: string;
+    recurrence: string;
     checklist: string | null;
+    checklistResetDaily: boolean;
     scheduledDate: string | null;
     dueDate: string | null;
   };
@@ -27,6 +29,7 @@ export function WeekTaskItem({
   weekStart: string;
   weekEnd?: string;
   today: string;
+  dailyDoneIds: string[];
 }) {
   const [editingDay, setEditingDay] = useState(false);
   const editorId = useId();
@@ -99,7 +102,7 @@ export function WeekTaskItem({
       </div>
       {task.checklist && (
         <div className="border-t px-3 pb-3 sm:px-4">
-          <TaskChecklist task={task} today={today} />
+          <TaskChecklist task={task} today={today} date={date} dailyDoneIds={dailyDoneIds} />
         </div>
       )}
       {!recurring && editingDay && (

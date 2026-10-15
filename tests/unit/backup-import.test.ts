@@ -82,6 +82,15 @@ describe('LifeOS backup restore', () => {
     await source.query(
       `INSERT INTO user_settings (user_id,timezone,theme) VALUES ('source','Asia/Colombo','dark')`,
     );
+    await source.query(
+      `INSERT INTO tasks (id,user_id,title,scheduled_date,due_date,recurrence,checklist,checklist_reset_daily)
+       VALUES ('11111111-1111-4111-8111-111111111111','source','Daily review','2026-10-01','2026-10-31','daily',
+       '[{"id":"22222222-2222-4222-8222-222222222222","text":"Review notes","done":false}]',true)`,
+    );
+    await source.query(
+      `INSERT INTO task_checklist_completions (user_id,task_id,item_id,date)
+       VALUES ('source','11111111-1111-4111-8111-111111111111','22222222-2222-4222-8222-222222222222','2026-10-11')`,
+    );
     await target.query(
       `INSERT INTO habits (user_id,name,start_date) VALUES ('target','Old habit','2026-01-01')`,
     );
@@ -132,6 +141,18 @@ describe('LifeOS backup restore', () => {
         )
       ).rows[0].timezone,
     ).toBe('Asia/Colombo');
+    expect(
+      (
+        await target.query<{ checklist_reset_daily: boolean }>(
+          'SELECT checklist_reset_daily FROM tasks WHERE user_id=$1',
+          ['target'],
+        )
+      ).rows[0].checklist_reset_daily,
+    ).toBe(true);
+    expect(
+      (await target.query('SELECT * FROM task_checklist_completions WHERE user_id=$1', ['target']))
+        .rows,
+    ).toHaveLength(1);
   }, 120_000);
 
   it('keeps existing data when a related record cannot be restored', async () => {
@@ -164,7 +185,10 @@ describe('LifeOS backup restore', () => {
     const backup = JSON.parse(await (await GET()).text());
     backup.schemaVersion = 1;
     delete backup.lifeOsSeedItems;
+    delete backup.taskChecklistCompletions;
+    for (const task of backup.tasks) delete task.checklistResetDaily;
     expect(parseBackup(backup).rows.lifeOsSeedItems).toEqual([]);
+    expect(parseBackup(backup).rows.taskChecklistCompletions).toEqual([]);
     state.userId = 'target';
     state.db = drizzle({ client: target, schema });
     const response = await POST(
