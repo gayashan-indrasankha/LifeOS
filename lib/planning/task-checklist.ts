@@ -7,11 +7,12 @@ export const ChecklistItemSchema = z.object({
   section: z.string().trim().min(1).max(100).optional(),
 });
 export type ChecklistItem = z.infer<typeof ChecklistItemSchema>;
+const MAX_CHECKLIST_ITEMS = 750;
 
 export function readChecklist(value: string | null): ChecklistItem[] {
   if (!value) return [];
   try {
-    return z.array(ChecklistItemSchema).max(500).parse(JSON.parse(value));
+    return z.array(ChecklistItemSchema).max(MAX_CHECKLIST_ITEMS).parse(JSON.parse(value));
   } catch {
     return [];
   }
@@ -39,8 +40,8 @@ export function checklistFromForm(
     entries.push({ text: line.replace(/^[-*] /, '').trim(), section });
   }
   if (!entries.length) return { items: [], error: 'Add at least one checklist item.' };
-  if (entries.length > 500)
-    return { items: [], error: 'Keep the checklist to 500 items or fewer.' };
+  if (entries.length > MAX_CHECKLIST_ITEMS)
+    return { items: [], error: `Keep the checklist to ${MAX_CHECKLIST_ITEMS} items or fewer.` };
   if (entries.some(({ text }) => !text || text.length > 160))
     return { items: [], error: 'Keep each checklist item to 160 characters or fewer.' };
   const used = new Set<string>();

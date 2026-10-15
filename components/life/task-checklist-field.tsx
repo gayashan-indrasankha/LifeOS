@@ -25,7 +25,7 @@ export function TaskChecklistField({ initial = null }: { initial?: string | null
             name="checklistItems"
             required
             rows={10}
-            maxLength={50000}
+            maxLength={75000}
             defaultValue={checklistToForm(items)}
             placeholder={
               '# Programming and OOP\n- Java basics\n- Classes and objects\n# Databases\n- SQL joins'

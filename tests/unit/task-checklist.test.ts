@@ -43,9 +43,9 @@ describe('task checklist', () => {
   });
 
   it('accepts a long grouped curriculum without truncating its items', () => {
-    const input = `# Curriculum\n${Array.from({ length: 391 }, (_, index) => `- Topic ${index + 1}`).join('\n')}`;
+    const input = `# Curriculum\n${Array.from({ length: 620 }, (_, index) => `- Topic ${index + 1}`).join('\n')}`;
     const result = checklistFromForm(true, input);
     expect(result.error).toBeUndefined();
-    expect(readChecklist(JSON.stringify(result.items))).toHaveLength(391);
+    expect(readChecklist(JSON.stringify(result.items))).toHaveLength(620);
   });
 });
