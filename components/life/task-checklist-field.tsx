@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { readChecklist } from '@/lib/planning/task-checklist';
+import { checklistToForm, readChecklist } from '@/lib/planning/task-checklist';
 
 export function TaskChecklistField({ initial = null }: { initial?: string | null }) {
   const items = readChecklist(initial);
@@ -19,15 +19,17 @@ export function TaskChecklistField({ initial = null }: { initial?: string | null
       </label>
       {enabled && (
         <label className="block text-muted-foreground">
-          One item per line. Progress carries forward from the task&apos;s start date through its
-          end date.
+          Add a heading with <code># Section name</code>, then one item per line. Progress carries
+          forward from the task&apos;s start date through its end date.
           <textarea
             name="checklistItems"
             required
-            rows={5}
-            maxLength={5000}
-            defaultValue={items.map((item) => item.text).join('\n')}
-            placeholder="Programming and OOP&#10;Data structures and algorithms&#10;SQL and databases"
+            rows={10}
+            maxLength={50000}
+            defaultValue={checklistToForm(items)}
+            placeholder={
+              '# Programming and OOP\n- Java basics\n- Classes and objects\n# Databases\n- SQL joins'
+            }
             className="mt-2 w-full rounded-lg border bg-background p-3 text-foreground"
           />
         </label>

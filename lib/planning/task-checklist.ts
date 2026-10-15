@@ -4,13 +4,14 @@ export const ChecklistItemSchema = z.object({
   id: z.uuid(),
   text: z.string().trim().min(1).max(160),
   done: z.boolean(),
+  section: z.string().trim().min(1).max(100).optional(),
 });
 export type ChecklistItem = z.infer<typeof ChecklistItemSchema>;
 
 export function readChecklist(value: string | null): ChecklistItem[] {
   if (!value) return [];
   try {
-    return z.array(ChecklistItemSchema).max(30).parse(JSON.parse(value));
+    return z.array(ChecklistItemSchema).max(500).parse(JSON.parse(value));
   } catch {
     return [];
   }
@@ -22,22 +23,54 @@ export function checklistFromForm(
   previous: ChecklistItem[] = [],
 ): { items: ChecklistItem[]; error?: string } {
   if (!enabled) return { items: [] };
-  const titles = raw
+  const lines = raw
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean);
-  if (!titles.length) return { items: [], error: 'Add at least one checklist item.' };
-  if (titles.length > 30) return { items: [], error: 'Keep the checklist to 30 items or fewer.' };
-  if (titles.some((title) => title.length > 160))
+  let section: string | undefined;
+  const entries: { text: string; section?: string }[] = [];
+  for (const line of lines) {
+    if (line.startsWith('# ')) {
+      section = line.slice(2).trim();
+      if (!section || section.length > 100)
+        return { items: [], error: 'Keep section headings to 100 characters or fewer.' };
+      continue;
+    }
+    entries.push({ text: line.replace(/^[-*] /, '').trim(), section });
+  }
+  if (!entries.length) return { items: [], error: 'Add at least one checklist item.' };
+  if (entries.length > 500)
+    return { items: [], error: 'Keep the checklist to 500 items or fewer.' };
+  if (entries.some(({ text }) => !text || text.length > 160))
     return { items: [], error: 'Keep each checklist item to 160 characters or fewer.' };
   const used = new Set<string>();
   return {
-    items: titles.map((title) => {
-      const existing = previous.find((item) => item.text === title && !used.has(item.id));
+    items: entries.map(({ text, section }) => {
+      const existing = previous.find((item) => item.text === text && !used.has(item.id));
       if (existing) used.add(existing.id);
-      return existing ?? { id: crypto.randomUUID(), text: title, done: false };
+      return {
+        id: existing?.id ?? crypto.randomUUID(),
+        text,
+        done: existing?.done ?? false,
+        ...(section ? { section } : {}),
+      };
     }),
   };
+}
+
+export function checklistToForm(items: ChecklistItem[]): string {
+  let section: string | undefined;
+  return items
+    .flatMap((item) => {
+      const lines: string[] = [];
+      if (item.section !== section) {
+        section = item.section;
+        if (section) lines.push(`# ${section}`);
+      }
+      lines.push(item.section ? `- ${item.text}` : item.text);
+      return lines;
+    })
+    .join('\n');
 }
 
 export function checklistActiveOn(
