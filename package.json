@@ -14,6 +14,8 @@
     "icons:generate": "node scripts/generate-app-icons.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
+    "perf:benchmark": "node scripts/benchmark-performance.mjs",
+    "perf:check": "node scripts/benchmark-performance.mjs --budget=300",
     "test:e2e": "node tests/e2e/run-scheduling.mjs",
     "db:check": "node --env-file=.env.local scripts/check-db.mjs",
     "db:embedded": "node scripts/embedded-db.cjs",
