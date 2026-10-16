@@ -1,3 +1,6 @@
+'use client';
+
+import { useMemo, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 
 import { ActionForm } from '@/components/life/action-form';
@@ -54,6 +57,44 @@ function ChecklistItems({
   );
 }
 
+function ChecklistSection({
+  section,
+  items,
+  active,
+  taskId,
+  completedIds,
+}: {
+  section: string;
+  items: ChecklistItem[];
+  active: boolean;
+  taskId: string;
+  completedIds: Set<string>;
+}) {
+  const [mounted, setMounted] = useState(false);
+  return (
+    <details
+      className="group/section mt-2 rounded-lg border bg-muted/20 px-3 py-2"
+      onToggle={(event) => {
+        if (event.target === event.currentTarget && event.currentTarget.open) setMounted(true);
+      }}
+    >
+      <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
+        <span className="flex-1">{section}</span>
+        <span className="tabular-nums text-muted-foreground">
+          {`${items.filter((item) => completedIds.has(item.id)).length}/${items.length}`}
+        </span>
+        <ChevronDown
+          aria-hidden="true"
+          className="size-4 shrink-0 transition-transform group-open/section:rotate-180"
+        />
+      </summary>
+      {mounted && (
+        <ChecklistItems items={items} active={active} taskId={taskId} completedIds={completedIds} />
+      )}
+    </details>
+  );
+}
+
 export function TaskChecklist({
   task,
   today,
@@ -73,7 +114,8 @@ export function TaskChecklist({
   date?: string;
   dailyDoneIds?: string[];
 }) {
-  const items = readChecklist(task.checklist);
+  const [mounted, setMounted] = useState(false);
+  const items = useMemo(() => readChecklist(task.checklist), [task.checklist]);
   if (!items.length) return null;
   const resetDaily = task.checklistResetDaily && task.recurrence === 'daily';
   const completedIds = new Set(
@@ -90,7 +132,12 @@ export function TaskChecklist({
     groups.set(section, group);
   }
   return (
-    <details className="group mt-4 rounded-xl border bg-background p-3">
+    <details
+      className="group mt-4 rounded-xl border bg-background p-3"
+      onToggle={(event) => {
+        if (event.target === event.currentTarget && event.currentTarget.open) setMounted(true);
+      }}
+    >
       <summary className="cursor-pointer list-none rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
         <span className="flex items-center gap-2 text-sm font-semibold">
           <span className="flex-1">{resetDaily ? 'Daily checklist' : 'Preparation progress'}</span>
@@ -118,40 +165,28 @@ export function TaskChecklist({
           />
         </span>
       </summary>
-      {[...groups].map(([section, sectionItems]) =>
-        section ? (
-          <details
-            key={section}
-            className="group/section mt-2 rounded-lg border bg-muted/20 px-3 py-2"
-          >
-            <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
-              <span className="flex-1">{section}</span>
-              <span className="tabular-nums text-muted-foreground">
-                {`${sectionItems.filter((item) => completedIds.has(item.id)).length}/${sectionItems.length}`}
-              </span>
-              <ChevronDown
-                aria-hidden="true"
-                className="size-4 shrink-0 transition-transform group-open/section:rotate-180"
-              />
-            </summary>
-            <ChecklistItems
+      {mounted &&
+        [...groups].map(([section, sectionItems]) =>
+          section ? (
+            <ChecklistSection
+              key={section}
+              section={section}
               items={sectionItems}
               active={active}
               taskId={task.id}
               completedIds={completedIds}
             />
-          </details>
-        ) : (
-          <ChecklistItems
-            key="ungrouped"
-            items={sectionItems}
-            active={active}
-            taskId={task.id}
-            completedIds={completedIds}
-          />
-        ),
-      )}
-      {!active && (
+          ) : (
+            <ChecklistItems
+              key="ungrouped"
+              items={sectionItems}
+              active={active}
+              taskId={task.id}
+              completedIds={completedIds}
+            />
+          ),
+        )}
+      {mounted && !active && (
         <p className="mt-2 text-xs text-muted-foreground">
           {resetDaily && date !== today
             ? 'Past and future daily checklists are read-only.'
