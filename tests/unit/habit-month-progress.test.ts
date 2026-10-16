@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { format } from 'date-fns';
 import { getDaysInMonth, isValidYearMonth } from '@/lib/utils/date';
-import { habitMonthProgress, isScheduledWeekday } from '@/lib/analytics/habit-month-progress';
+import {
+  habitMonthProgress,
+  habitRuleOn,
+  isScheduledWeekday,
+} from '@/lib/analytics/habit-month-progress';
 
 function days(year: number, month: number) {
   return getDaysInMonth(year, month).map((day) => ({
@@ -13,6 +17,23 @@ function days(year: number, month: number) {
 }
 
 describe('monthly calendar', () => {
+  it('chooses the latest eligible revision without changing history order', () => {
+    const revisions = ['2026-10-10', '2026-11-01', '2026-10-01'].map((effectiveDate) => ({
+      effectiveDate,
+      schedule: 'daily',
+      startDate: '2026-10-01',
+      endDate: null,
+      status: 'active',
+    }));
+    const habit = { schedule: 'daily', startDate: '2026-10-01', scheduleRevisions: revisions };
+    expect(habitRuleOn(habit, '2026-10-16')).toBe(revisions[0]);
+    expect(habitRuleOn(habit, '2026-09-30')).toBeNull();
+    expect(revisions.map((revision) => revision.effectiveDate)).toEqual([
+      '2026-10-10',
+      '2026-11-01',
+      '2026-10-01',
+    ]);
+  });
   it.each([
     [2025, 2, 28],
     [2024, 2, 29],

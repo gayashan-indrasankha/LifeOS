@@ -22,11 +22,15 @@ export type DatedHabit = {
 /** A missing rule before a legacy baseline means the old schedule is unknown. */
 export function habitRuleOn(habit: DatedHabit, date: string) {
   if (habit.scheduleRevisions) {
-    return (
-      habit.scheduleRevisions
-        .filter((revision) => revision.effectiveDate <= date)
-        .sort((a, b) => b.effectiveDate.localeCompare(a.effectiveDate))[0] ?? null
-    );
+    let latest: (typeof habit.scheduleRevisions)[number] | null = null;
+    for (const revision of habit.scheduleRevisions) {
+      if (
+        revision.effectiveDate <= date &&
+        (!latest || revision.effectiveDate > latest.effectiveDate)
+      )
+        latest = revision;
+    }
+    return latest;
   }
   return {
     ...habit,
@@ -42,7 +46,9 @@ export function isHabitActiveOn(habit: DatedHabit, date: string) {
 
 export function isFlexibleHabitOn(habit: DatedHabit, date: string) {
   const rule = habitRuleOn(habit, date);
-  return Boolean(rule && isHabitActiveOn(habit, date) && isFlexibleWeekly(rule.schedule));
+  return Boolean(
+    rule && rule.status === 'active' && inHabitRange(rule, date) && isFlexibleWeekly(rule.schedule),
+  );
 }
 
 export function isScheduledWeekday(schedule: string, dayOfWeek: number): boolean {
@@ -65,7 +71,8 @@ export function isFixedOccurrence(habit: DatedHabit, date: string, dayOfWeek: nu
   const rule = habitRuleOn(habit, date);
   return (
     rule !== null &&
-    isHabitActiveOn(habit, date) &&
+    rule.status === 'active' &&
+    inHabitRange(rule, date) &&
     !isFlexibleWeekly(rule.schedule) &&
     isScheduledWeekday(rule.schedule, dayOfWeek)
   );
@@ -145,7 +152,10 @@ export function isGridApplicable(
   void startsOn;
   const rule = habitRuleOn(habit, day.date);
   return Boolean(
-    rule && isHabitActiveOn(habit, day.date) && isScheduledWeekday(rule.schedule, day.dayOfWeek),
+    rule &&
+    rule.status === 'active' &&
+    inHabitRange(rule, day.date) &&
+    isScheduledWeekday(rule.schedule, day.dayOfWeek),
   );
 }
 
