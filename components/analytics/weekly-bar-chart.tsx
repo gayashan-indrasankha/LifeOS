@@ -71,7 +71,13 @@ export function WeeklyBarChart({ data }: WeeklyBarChartProps) {
                       fontSize: 12,
                     }}
                   />
-                  <Bar dataKey="rate" fill="var(--primary)" radius={[4, 4, 0, 0]} maxBarSize={72} />
+                  <Bar
+                    isAnimationActive={false}
+                    dataKey="rate"
+                    fill="var(--primary)"
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={72}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
