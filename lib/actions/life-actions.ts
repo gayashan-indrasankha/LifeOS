@@ -690,7 +690,7 @@ export async function updateTaskAction(
           ...(parsed.data.actualMinutes !== undefined
             ? { actualMinutes: parsed.data.actualMinutes === '' ? null : parsed.data.actualMinutes }
             : {}),
-          completedAt: parsed.data.status === 'done' ? (previous.completedAt ?? new Date()) : null,
+          completedAt: parsed.data.status === 'done' ? (previous.completedAt ?? serverNow()) : null,
           updatedAt: new Date(),
         })
         .where(and(eq(tasks.userId, userId), eq(tasks.id, parsed.data.id)));
@@ -1522,7 +1522,7 @@ export async function updateOccurrenceAction(
         .update(tasks)
         .set({
           status: 'done',
-          completedAt: linkedTask.completedAt ?? new Date(),
+          completedAt: linkedTask.completedAt ?? serverNow(),
           updatedAt: new Date(),
         })
         .where(and(eq(tasks.userId, userId), eq(tasks.id, linkedTask.id)));
