@@ -13,7 +13,6 @@ import { getTodayInTimezone, toDateString } from '@/lib/utils/date';
 import {
   createGoalAction,
   createTaskAction,
-  editTaskAction,
   updateTaskAction,
   toggleTaskOccurrenceAction,
 } from '@/lib/actions/life-actions';
@@ -27,6 +26,7 @@ import { GoalWeightTrend } from '@/components/life/goal-weight-trend';
 import { ProjectsTab } from '@/components/life/projects-tab';
 import { TaskRepeatField } from '@/components/life/task-repeat-field';
 import { TaskChecklist } from '@/components/life/task-checklist';
+import { TaskEditForm } from '@/components/life/task-edit-form';
 import { occursOn as taskOccursOn } from '@/lib/planning/task-recurrence';
 import { weightTrend } from '@/lib/evidence/summary';
 import { LIFE_AREAS, normalizeLifeArea } from '@/lib/life-areas';
@@ -47,15 +47,21 @@ export default async function GoalsPage({
   const [goals, projects, tasks, metrics, settings] = await Promise.all([
     getGoals(userId),
     getProjects(userId),
-    getTasks(userId),
-    getMetrics(userId),
+    getTasks(userId, { includeChecklists: view === 'tasks' }),
+    view === 'goals' ? getMetrics(userId, 'Body weight') : Promise.resolve([]),
     getUserSettings(userId),
   ]);
   const today = toDateString(getTodayInTimezone(settings.timezone));
   const [completedToday, dailyChecklistDoneByDate] = await Promise.all([
-    getTaskCompletionKeys(userId, today, today),
-    getTaskChecklistDoneByDate(userId, today, today),
+    view === 'tasks'
+      ? getTaskCompletionKeys(userId, today, today)
+      : Promise.resolve(new Set<string>()),
+    view === 'tasks'
+      ? getTaskChecklistDoneByDate(userId, today, today)
+      : Promise.resolve({} as Record<string, string[]>),
   ]);
+  const projectOptions = projects.map(({ id, name }) => ({ id, name }));
+  const goalOptions = goals.map(({ id, title }) => ({ id, title }));
   const activeTasks = tasks.filter((task) => !['done', 'cancelled'].includes(task.status));
   const inactiveTasks = tasks.filter((task) => ['done', 'cancelled'].includes(task.status));
   const activeGoals = goals.filter((goal) => !goal.archivedAt);
@@ -587,137 +593,13 @@ export default async function GoalsPage({
                         dailyDoneIds={dailyChecklistDoneByDate[`${task.id}:${today}`] ?? []}
                       />
                       <div className="mt-4 grid grid-cols-[1fr_auto] items-start gap-2 border-t pt-3">
-                        <details className="group min-w-0 open:col-span-2">
-                          <summary className="inline-flex min-h-9 cursor-pointer list-none items-center gap-2 rounded-lg bg-primary/5 px-3 text-sm font-medium text-primary hover:bg-primary/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
-                            Edit task
-                            <svg
-                              aria-hidden="true"
-                              viewBox="0 0 20 20"
-                              fill="none"
-                              className="size-4 transition-transform group-open:rotate-180"
-                            >
-                              <path
-                                d="m5 7.5 5 5 5-5"
-                                stroke="currentColor"
-                                strokeWidth="1.75"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </summary>
-                          <ActionForm
-                            action={editTaskAction}
-                            submitLabel="Save task"
-                            showSuccess={false}
-                            successConfirmation="Saved"
-                            className="mt-3 grid gap-4 rounded-xl border bg-muted/20 p-4 sm:grid-cols-2 [&>div]:col-span-full [&>[role=alert]]:col-span-full"
-                          >
-                            <input type="hidden" name="id" value={task.id} />
-                            <input
-                              type="hidden"
-                              name="estimatedMinutes"
-                              value={task.estimatedMinutes ?? ''}
-                            />
-                            <label className="text-sm font-medium">
-                              Title
-                              <input
-                                name="title"
-                                defaultValue={task.title}
-                                required
-                                maxLength={160}
-                                className="mt-1.5 min-h-11 w-full rounded-lg border bg-background px-3 font-normal"
-                              />
-                            </label>
-                            <AreaField
-                              label="Area"
-                              options={availableAreas}
-                              defaultValue={group.area}
-                            />
-                            <label className="text-sm font-medium sm:col-span-2">
-                              Details
-                              <textarea
-                                name="details"
-                                defaultValue={task.details ?? ''}
-                                maxLength={4000}
-                                className="mt-1.5 min-h-24 w-full rounded-lg border bg-background p-3 font-normal"
-                              />
-                            </label>
-                            <label className="text-sm font-medium">
-                              Project
-                              <select
-                                name="projectId"
-                                defaultValue={task.projectId ?? ''}
-                                className="mt-1.5 min-h-11 w-full rounded-lg border bg-background px-3 font-normal"
-                              >
-                                <option value="">None</option>
-                                {projects.map((item) => (
-                                  <option key={item.id} value={item.id}>
-                                    {item.name}
-                                  </option>
-                                ))}
-                              </select>
-                            </label>
-                            <label className="text-sm font-medium">
-                              Goal
-                              <select
-                                name="goalId"
-                                defaultValue={task.goalId ?? ''}
-                                className="mt-1.5 min-h-11 w-full rounded-lg border bg-background px-3 font-normal"
-                              >
-                                <option value="">None</option>
-                                {goals.map((item) => (
-                                  <option key={item.id} value={item.id}>
-                                    {item.title}
-                                  </option>
-                                ))}
-                              </select>
-                            </label>
-                            <label className="text-sm font-medium">
-                              Priority
-                              <select
-                                name="priority"
-                                defaultValue={task.priority}
-                                className="mt-1.5 min-h-11 w-full rounded-lg border bg-background px-3 font-normal"
-                              >
-                                <option value="1">High</option>
-                                <option value="2">Medium</option>
-                                <option value="3">Low</option>
-                              </select>
-                            </label>
-                            <label className="text-sm font-medium">
-                              Start date
-                              <input
-                                type="date"
-                                name="scheduledDate"
-                                defaultValue={task.scheduledDate ?? ''}
-                                className="mt-1.5 min-h-11 w-full rounded-lg border bg-background px-3 font-normal"
-                              />
-                            </label>
-                            <label className="text-sm font-medium">
-                              End date
-                              <input
-                                type="date"
-                                name="dueDate"
-                                defaultValue={task.dueDate ?? ''}
-                                className="mt-1.5 min-h-11 w-full rounded-lg border bg-background px-3 font-normal"
-                              />
-                            </label>
-                            <TaskRepeatField
-                              initial={task.recurrence}
-                              weekdays={task.weekdays}
-                              checklist={task.checklist}
-                              checklistResetDaily={task.checklistResetDaily}
-                            />
-                            <label className="flex min-h-11 items-center gap-2 text-sm font-medium">
-                              <input
-                                type="checkbox"
-                                name="isMilestone"
-                                defaultChecked={task.isMilestone}
-                              />{' '}
-                              Milestone
-                            </label>
-                          </ActionForm>
-                        </details>
+                        <TaskEditForm
+                          task={task}
+                          areas={availableAreas}
+                          area={group.area}
+                          projects={projectOptions}
+                          goals={goalOptions}
+                        />
                         <DeleteTaskButton id={task.id} title={task.title} />
                       </div>
                     </li>
