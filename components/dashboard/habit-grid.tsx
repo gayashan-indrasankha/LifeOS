@@ -18,13 +18,8 @@ interface HabitGridProps {
   weekStartsOn?: number;
 }
 
-function dateInTimezone(instant: Date, timezone: string): string {
-  const parts = new Intl.DateTimeFormat('en', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(instant);
+function dateInTimezone(instant: Date, formatter: Intl.DateTimeFormat): string {
+  const parts = formatter.formatToParts(instant);
   const value = (type: string) => parts.find((part) => part.type === type)?.value;
   return `${value('year')}-${value('month')}-${value('day')}`;
 }
@@ -44,8 +39,16 @@ export function HabitGrid({
   useEffect(() => {
     const mountedAt = Date.now();
     const initialTime = Date.parse(clockStartedAt);
-    const refreshDay = () =>
-      setCurrentDay(dateInTimezone(new Date(initialTime + Date.now() - mountedAt), timezone));
+    const formatter = new Intl.DateTimeFormat('en', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    const refreshDay = () => {
+      if (document.hidden) return;
+      setCurrentDay(dateInTimezone(new Date(initialTime + Date.now() - mountedAt), formatter));
+    };
     refreshDay();
     const timer = window.setInterval(refreshDay, 1000);
     document.addEventListener('visibilitychange', refreshDay);
