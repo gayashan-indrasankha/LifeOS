@@ -5,7 +5,6 @@ import { AppSidebar, MobileNav } from '@/components/layout/app-sidebar';
 import { AppHeader } from '@/components/layout/app-header';
 import { CloudRefresh } from '@/components/providers/cloud-refresh';
 import { AndroidCloudRefresh } from '@/components/providers/android-cloud-refresh';
-import { RealtimeSync } from '@/components/providers/realtime-sync';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
@@ -14,18 +13,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className={`${isAndroidApp ? 'lifeos-android ' : ''}flex min-h-screen bg-background`}>
-      {isAndroidApp ? (
-        <>
-          <AndroidCloudRefresh />
-          <RealtimeSync />
-        </>
-      ) : (
-        <CloudRefresh />
-      )}
+      {isAndroidApp ? <AndroidCloudRefresh /> : <CloudRefresh />}
       <AppSidebar user={user} />
       <div className="flex min-w-0 flex-1 flex-col lg:pl-64">
         <AppHeader user={user} settings={settings} />
-        <MobileNav isAndroidApp={isAndroidApp} />
+        <MobileNav />
         <main className="min-w-0 flex-1 p-4 md:p-6 lg:p-8">{children}</main>
       </div>
     </div>

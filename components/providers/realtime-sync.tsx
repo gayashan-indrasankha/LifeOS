@@ -56,6 +56,7 @@ export function RealtimeSync() {
     document.addEventListener('visibilitychange', onVisible);
     window.addEventListener('focus', onVisible);
     window.addEventListener('online', onVisible);
+    window.addEventListener('lifeos:android-resume', onVisible);
     const fallback = setInterval(() => {
       if (!realtimeWindow.__lifeosRealtimeConnected && Date.now() - lastRefresh > 15_000) {
         refresh();
@@ -70,6 +71,7 @@ export function RealtimeSync() {
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('focus', onVisible);
       window.removeEventListener('online', onVisible);
+      window.removeEventListener('lifeos:android-resume', onVisible);
     };
   }, [router]);
 

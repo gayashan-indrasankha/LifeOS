@@ -30,27 +30,25 @@ function isActivePath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function MobileNav({ isAndroidApp = false }: { isAndroidApp?: boolean }) {
+export function MobileNav() {
   const pathname = usePathname();
   const router = useRouter();
   const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (isAndroidApp) return;
-    // Links outside the horizontal viewport are not prefetched by Next.js.
-    // Warm those page payloads after the initial page has become interactive.
-    const prefetch = () => {
-      for (const href of ['/goals', '/review', '/notes', '/settings']) {
-        router.prefetch(href);
-      }
-    };
-    if (typeof window.requestIdleCallback === 'function') {
-      const idleId = window.requestIdleCallback(prefetch, { timeout: 3000 });
-      return () => window.cancelIdleCallback(idleId);
-    }
-    const timeoutId = setTimeout(prefetch, 1500);
-    return () => clearTimeout(timeoutId);
-  }, [router, isAndroidApp]);
+    if (!window.matchMedia('(max-width: 1023px)').matches) return;
+    // Warm off-screen destinations gradually after the current page settles.
+    // Checklist item forms are created only when opened, keeping these payloads small.
+    const timers = ['/goals', '/review', '/notes', '/settings'].map((href, index) =>
+      window.setTimeout(
+        () => {
+          if (!document.hidden && navigator.onLine) router.prefetch(href);
+        },
+        1000 + index * 400,
+      ),
+    );
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, [router]);
 
   useEffect(() => {
     if (!window.matchMedia('(max-width: 1023px)').matches) return;
@@ -76,7 +74,10 @@ export function MobileNav({ isAndroidApp = false }: { isAndroidApp?: boolean }) 
         <Link
           key={item.href}
           href={item.href}
-          prefetch={isAndroidApp ? undefined : true}
+          prefetch={true}
+          onMouseEnter={() => router.prefetch(item.href)}
+          onFocus={() => router.prefetch(item.href)}
+          onTouchStart={() => router.prefetch(item.href)}
           aria-current={isActivePath(pathname, item.href) ? 'page' : undefined}
           className={cn(
             'flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary',
@@ -99,6 +100,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ user }: AppSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
 
   return (
     <aside className="fixed inset-y-0 left-0 z-50 hidden w-64 flex-col border-r bg-card lg:flex">
@@ -116,6 +118,8 @@ export function AppSidebar({ user }: AppSidebarProps) {
               key={item.name}
               href={item.href}
               prefetch={true}
+              onMouseEnter={() => router.prefetch(item.href)}
+              onFocus={() => router.prefetch(item.href)}
               aria-current={isActive ? 'page' : undefined}
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
