@@ -44,12 +44,14 @@ export async function toggleEntryAction(
   const { habitId, date, completed } = parsed.data;
 
   // 3. Verify the habit belongs to this user (authorization)
-  const habit = await getHabitByIdAndUser(habitId, userId);
+  const [habit, settings] = await Promise.all([
+    getHabitByIdAndUser(habitId, userId),
+    getUserSettings(userId),
+  ]);
   if (!habit || habit.archived) {
     return { error: 'Habit not found' };
   }
 
-  const settings = await getUserSettings(userId);
   const today = toDateString(getTodayInTimezone(settings.timezone));
   if (date < today) {
     return { error: 'Past days are locked. Only today’s habits can be changed.' };
