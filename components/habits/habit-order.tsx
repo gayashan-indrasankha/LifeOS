@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
 import { ArrowDown, ArrowUp, ListOrdered } from 'lucide-react';
 import type { SelectHabit } from '@/types';
 import { reorderHabitsAction } from '@/lib/actions/habit-actions';
@@ -12,7 +11,6 @@ export function HabitOrder({ habits }: { habits: SelectHabit[] }) {
   const [isReordering, setIsReordering] = useState(false);
   const [pending, start] = useTransition();
   const [error, setError] = useState('');
-  const router = useRouter();
   const [previousHabits, setPreviousHabits] = useState(habits);
   if (habits !== previousHabits) {
     setPreviousHabits(habits);
@@ -29,7 +27,6 @@ export function HabitOrder({ habits }: { habits: SelectHabit[] }) {
       try {
         const result = await reorderHabitsAction(next.map((item) => item.id));
         if (result.error) throw new Error(result.error);
-        router.refresh();
       } catch {
         setItems(previous);
         setError('Could not save the new order. Try again.');
