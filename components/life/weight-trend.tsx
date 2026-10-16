@@ -53,9 +53,17 @@ export function WeightTrend({
               name === 'value' ? 'Recorded daily mean' : 'Target',
             ]}
           />
-          <Line type="linear" dataKey="value" stroke="var(--primary)" strokeWidth={2} dot />
+          <Line
+            isAnimationActive={false}
+            type="linear"
+            dataKey="value"
+            stroke="var(--primary)"
+            strokeWidth={2}
+            dot
+          />
           {target != null && (
             <Line
+              isAnimationActive={false}
               type="linear"
               dataKey="target"
               stroke="#94a3b8"
