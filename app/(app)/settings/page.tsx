@@ -11,8 +11,10 @@ export const metadata = { title: 'Settings | LifeOS' };
 
 export default async function SettingsPage() {
   const user = await requireUser();
-  const settings = await getUserSettings(user.id);
-  const meals = await getMealTemplates(user.id);
+  const [settings, meals] = await Promise.all([
+    getUserSettings(user.id),
+    getMealTemplates(user.id),
+  ]);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 pb-10">
