@@ -28,8 +28,8 @@ export default async function WeekPage({
   const start = weekStart(focused, settings.weekStartsOn);
   const end = addCalendarDays(start, 6);
   const dates = Array.from({ length: 7 }, (_, i) => addCalendarDays(start, i));
-  const tasks = await getTasks(user.id);
-  const [completed, dailyChecklistDoneByDate] = await Promise.all([
+  const [tasks, completed, dailyChecklistDoneByDate] = await Promise.all([
+    getTasks(user.id),
     getTaskCompletionKeys(user.id, start, end),
     getTaskChecklistDoneByDate(user.id, start, end),
   ]);
