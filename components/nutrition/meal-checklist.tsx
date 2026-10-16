@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
 import { ChevronDown, UtensilsCrossed } from 'lucide-react';
 import { saveMealActualAction, setMealStatusAction } from '@/lib/actions/nutrition-actions';
 import {
@@ -42,7 +41,6 @@ export function MealChecklist({
     unrecordedDays: number;
   };
 }) {
-  const router = useRouter();
   const [statuses, setStatuses] = useState(initialStatuses);
   const [actuals, setActuals] = useState(initialActuals);
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -90,7 +88,6 @@ export function MealChecklist({
           },
         }));
         setSavedId(id);
-        router.refresh();
       } catch {
         setError('Could not save actual amounts. Try again.');
       } finally {
@@ -115,7 +112,6 @@ export function MealChecklist({
           else next[id] = status;
           return next;
         });
-        router.refresh();
       } catch {
         setError('Could not save this meal. Try again.');
       } finally {
