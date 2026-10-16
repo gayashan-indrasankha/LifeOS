@@ -87,16 +87,22 @@ test('monthly tracker toggles and persists completion across desktop and mobile'
   await expect(page.getByRole('button', { name: 'Current month' })).toBeDisabled();
 
   const weekHeader = page.locator('thead tr').first();
+  await expect(weekHeader).toBeVisible();
   const octoberHeight = await weekHeader.evaluate((row) => row.getBoundingClientRect().height);
+  expect(octoberHeight).toBeGreaterThan(0);
   await page.getByRole('button', { name: 'Next month' }).click();
   await expect(page).toHaveURL(/month=2026-11/);
   await expect(page.locator('thead th[title]')).toHaveCount(30);
-  const novemberHeight = await weekHeader.evaluate((row) => row.getBoundingClientRect().height);
-  expect(novemberHeight).toBeCloseTo(octoberHeight, 0);
+  await expect(weekHeader).toBeVisible();
+  await expect
+    .poll(() => weekHeader.evaluate((row) => row.getBoundingClientRect().height))
+    .toBeCloseTo(octoberHeight, 0);
   await page.goto('/dashboard?month=2016-02');
   await expect(page.locator('thead th[title]')).toHaveCount(29);
-  const februaryHeight = await weekHeader.evaluate((row) => row.getBoundingClientRect().height);
-  expect(februaryHeight).toBeCloseTo(octoberHeight, 0);
+  await expect(weekHeader).toBeVisible();
+  await expect
+    .poll(() => weekHeader.evaluate((row) => row.getBoundingClientRect().height))
+    .toBeCloseTo(octoberHeight, 0);
   await expect(page.getByRole('row', { name: new RegExp(habitName) })).toHaveCount(0);
 
   await page.setViewportSize({ width: 390, height: 844 });
