@@ -1,6 +1,7 @@
-import { eq, and, gte, lte } from 'drizzle-orm';
+import { eq, and, gte, lte, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { habitEntries, habitScheduleRevisions, habits } from '@/lib/db/schema';
+import { habitEntries, habits } from '@/lib/db/schema';
+import { getHabitScheduleRevisions } from '@/lib/dal/habits';
 
 /**
  * Get all habit entries for a user within a date range (for month view).
@@ -49,7 +50,7 @@ export async function getActiveHabitCompletionsThrough(userId: string, cutoff: s
     db
       .select({
         habitId: habitEntries.habitId,
-        date: habitEntries.date,
+        dates: sql<string[]>`array_agg(${habitEntries.date}::text)`,
         startDate: habits.startDate,
         endDate: habits.endDate,
         schedule: habits.schedule,
@@ -63,8 +64,9 @@ export async function getActiveHabitCompletionsThrough(userId: string, cutoff: s
           eq(habitEntries.completed, true),
           lte(habitEntries.date, cutoff),
         ),
-      ),
-    db.select().from(habitScheduleRevisions).where(eq(habitScheduleRevisions.userId, userId)),
+      )
+      .groupBy(habitEntries.habitId, habits.id),
+    getHabitScheduleRevisions(userId),
   ]);
   const revisionsByHabit = new Map<string, typeof revisions>();
   for (const revision of revisions) {
@@ -72,10 +74,12 @@ export async function getActiveHabitCompletionsThrough(userId: string, cutoff: s
     group.push(revision);
     revisionsByHabit.set(revision.habitId, group);
   }
-  return entries.map((entry) => ({
-    ...entry,
-    scheduleRevisions: revisionsByHabit.get(entry.habitId) ?? [],
-  }));
+  // Send habit metadata once per habit rather than once per historical day.
+  // Expand in memory so streak eligibility keeps using the same schedule rules.
+  return entries.flatMap(({ dates, ...habit }) => {
+    const scheduleRevisions = revisionsByHabit.get(habit.habitId) ?? [];
+    return dates.map((date) => ({ ...habit, date, scheduleRevisions }));
+  });
 }
 
 /**

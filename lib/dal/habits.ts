@@ -1,8 +1,15 @@
-import { eq, and, asc, gte } from 'drizzle-orm';
+import { cache } from 'react';
+import { eq, and, asc, gte, inArray, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { dayPlans, habitScheduleRevisions, habits, lifeOsSeedItems } from '@/lib/db/schema';
 import type { HabitCreateInput, HabitUpdateInput } from '@/lib/validations/habit';
 import { habitRuleOn } from '@/lib/analytics/habit-month-progress';
+
+// Deduplicate within one server render only; mutations and other devices always
+// read fresh data on the next request.
+export const getHabitScheduleRevisions = cache(async (userId: string) =>
+  db.select().from(habitScheduleRevisions).where(eq(habitScheduleRevisions.userId, userId)),
+);
 
 async function withRevisions(userId: string, activeOnly: boolean) {
   const [rows, revisions] = await Promise.all([
@@ -15,7 +22,7 @@ async function withRevisions(userId: string, activeOnly: boolean) {
           : eq(habits.userId, userId),
       )
       .orderBy(asc(habits.sortOrder), asc(habits.createdAt)),
-    db.select().from(habitScheduleRevisions).where(eq(habitScheduleRevisions.userId, userId)),
+    getHabitScheduleRevisions(userId),
   ]);
   const revisionsByHabit = new Map<string, typeof revisions>();
   for (const revision of revisions) {
@@ -51,18 +58,20 @@ export async function getAllHabitsByUser(userId: string) {
  * Get a single habit by ID, scoped to the user.
  */
 export async function getHabitByIdAndUser(habitId: string, userId: string) {
-  const result = await db
-    .select()
-    .from(habits)
-    .where(and(eq(habits.id, habitId), eq(habits.userId, userId)))
-    .limit(1);
+  const [result, revisions] = await Promise.all([
+    db
+      .select()
+      .from(habits)
+      .where(and(eq(habits.id, habitId), eq(habits.userId, userId)))
+      .limit(1),
+    db
+      .select()
+      .from(habitScheduleRevisions)
+      .where(
+        and(eq(habitScheduleRevisions.habitId, habitId), eq(habitScheduleRevisions.userId, userId)),
+      ),
+  ]);
   if (!result[0]) return null;
-  const revisions = await db
-    .select()
-    .from(habitScheduleRevisions)
-    .where(
-      and(eq(habitScheduleRevisions.habitId, habitId), eq(habitScheduleRevisions.userId, userId)),
-    );
   return { ...result[0], scheduleRevisions: revisions };
 }
 
@@ -256,19 +265,24 @@ export async function deleteHabit(habitId: string, userId: string) {
  * Reorder habits by updating sort_order.
  */
 export async function reorderHabits(userId: string, orderedIds: string[]) {
-  if (new Set(orderedIds).size !== orderedIds.length) throw new Error('Invalid habit order');
+  const ids = new Set(orderedIds);
+  if (ids.size !== orderedIds.length) throw new Error('Invalid habit order');
   await db.transaction(async (tx) => {
     const owned = await tx
       .select({ id: habits.id })
       .from(habits)
       .where(and(eq(habits.userId, userId), eq(habits.archived, false)));
-    if (owned.length !== orderedIds.length || owned.some(({ id }) => !orderedIds.includes(id)))
+    if (owned.length !== orderedIds.length || owned.some(({ id }) => !ids.has(id)))
       throw new Error('Invalid habit order');
-    for (const [index, id] of orderedIds.entries()) {
-      await tx
-        .update(habits)
-        .set({ sortOrder: index, updatedAt: new Date() })
-        .where(and(eq(habits.id, id), eq(habits.userId, userId)));
-    }
+    if (!orderedIds.length) return;
+    // One parameterized update instead of a network round trip for every habit.
+    const order = sql`case ${habits.id} ${sql.join(
+      orderedIds.map((id, index) => sql`when ${id}::uuid then ${index}::integer`),
+      sql` `,
+    )} end`;
+    await tx
+      .update(habits)
+      .set({ sortOrder: order, updatedAt: new Date() })
+      .where(and(eq(habits.userId, userId), inArray(habits.id, orderedIds)));
   });
 }
