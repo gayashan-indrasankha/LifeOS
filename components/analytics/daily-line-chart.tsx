@@ -74,6 +74,7 @@ export function DailyLineChart({ data }: DailyLineChartProps) {
                 }}
               />
               <Line
+                isAnimationActive={false}
                 type="monotone"
                 dataKey="rate"
                 stroke="var(--primary)"
