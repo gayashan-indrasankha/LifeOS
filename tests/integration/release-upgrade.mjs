@@ -200,13 +200,13 @@ async function assertPreserved(query, ids, boundary, expectBackfill = true) {
     'SELECT date::text AS date FROM task_completions WHERE task_id=$1',
     [ids.task],
   );
-  assert.deepEqual(completions, boundary >= 25 ? [{ date: '2026-01-01' }] : []);
+  assert.deepEqual(Array.from(completions), boundary >= 25 ? [{ date: '2026-01-01' }] : []);
   const checklistCompletions = await query(
     'SELECT item_id,date::text AS date FROM task_checklist_completions WHERE task_id=$1',
     [ids.task],
   );
   assert.deepEqual(
-    checklistCompletions,
+    Array.from(checklistCompletions),
     boundary >= 27 ? [{ item_id: ids.checklistItem, date: '2026-01-01' }] : [],
   );
   assert.equal((await one('time_block_exceptions', ids.exception)).block_id, ids.block);
