@@ -40,6 +40,7 @@ export function CompletionDonut({ stats }: CompletionDonutProps) {
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
+                isAnimationActive={false}
                 data={data}
                 cx="50%"
                 cy="50%"
