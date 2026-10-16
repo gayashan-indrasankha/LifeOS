@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, lte, or } from 'drizzle-orm';
+import { and, asc, desc, eq, getTableColumns, gte, lte, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
   dayPlans,
@@ -24,9 +24,12 @@ export const getGoals = (userId: string) =>
     .orderBy(asc(goals.priority), asc(goals.createdAt));
 export const getProjects = (userId: string) =>
   db.select().from(projects).where(eq(projects.userId, userId)).orderBy(asc(projects.createdAt));
-export const getTasks = (userId: string) =>
+export const getTasks = (userId: string, options: { includeChecklists?: boolean } = {}) =>
   db
-    .select()
+    .select({
+      ...getTableColumns(tasks),
+      checklist: options.includeChecklists === false ? sql<string | null>`null` : tasks.checklist,
+    })
     .from(tasks)
     .where(eq(tasks.userId, userId))
     .orderBy(asc(tasks.status), asc(tasks.sortOrder), asc(tasks.createdAt));

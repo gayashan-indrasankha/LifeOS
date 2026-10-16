@@ -135,7 +135,7 @@ export default async function ReviewPage() {
     journalDays,
     meals,
   ] = await Promise.all([
-    getTasks(userId),
+    getTasks(userId, { includeChecklists: false }),
     getGoals(userId),
     getProjects(userId),
     getHistoricalHabitsByUser(userId),
