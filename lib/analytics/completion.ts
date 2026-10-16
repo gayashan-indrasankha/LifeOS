@@ -24,14 +24,14 @@ export function calculateCompletionRate(
   let totalCompleted = 0;
 
   const todayStr = formatDateStr(today);
+  const elapsedDays = daysInMonth
+    .map((day) => ({ date: formatDateStr(day), weekday: day.getDay() }))
+    .filter((day) => day.date <= todayStr);
 
   for (const habit of habits) {
-    for (const day of daysInMonth) {
-      const dayStr = formatDateStr(day);
-      // Don't count future days
-      if (dayStr > todayStr) continue;
+    for (const { date: dayStr, weekday } of elapsedDays) {
       // Don't count days before habit started
-      if (!isFixedOccurrence(habit, dayStr, day.getDay())) continue;
+      if (!isFixedOccurrence(habit, dayStr, weekday)) continue;
 
       totalPossible++;
       if (entrySet.has(`${habit.id}:${dayStr}`)) {
