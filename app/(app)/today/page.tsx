@@ -53,47 +53,57 @@ export default async function TodayPage({
   const params = await searchParams;
   const showFinish = params.finish === '1';
   const start = weekStart(date, settings.weekStartsOn);
-  const [allTasks, dayPlan, habits, entries, note, projects, followUps, meals, mealLogs, weights] =
-    await Promise.all([
-      getTasks(user.id),
-      getDayPlan(user.id, date),
-      getActiveHabitsByUser(user.id),
-      getEntriesByUserAndDateRange(user.id, start, addCalendarDays(start, 6)),
-      getNoteByUserAndDate(user.id, date),
-      getProjects(user.id),
-      db
-        .select()
-        .from(internshipApplications)
-        .where(
-          and(
-            eq(internshipApplications.userId, user.id),
-            lte(internshipApplications.followUpDate, date),
-            notInArray(internshipApplications.stage, ['saved', 'rejected', 'withdrawn', 'offer']),
-          ),
-        )
-        .orderBy(asc(internshipApplications.followUpDate))
-        .limit(1),
-      getMealTemplates(user.id),
-      getMealLogs(user.id, start, addCalendarDays(start, 6)),
-      db
-        .select()
-        .from(metricEntries)
-        .where(
-          and(
-            eq(metricEntries.userId, user.id),
-            eq(metricEntries.type, 'Body weight'),
-            eq(metricEntries.unit, 'kg'),
-            lte(metricEntries.date, date),
-          ),
-        )
-        .orderBy(desc(metricEntries.date), desc(metricEntries.createdAt))
-        .limit(1),
-    ]);
-  const latestWeight = weights[0] ?? null;
-  const [completedTasks, dailyChecklistDoneByDate] = await Promise.all([
+  const [
+    allTasks,
+    dayPlan,
+    habits,
+    entries,
+    note,
+    projects,
+    followUps,
+    meals,
+    mealLogs,
+    weights,
+    completedTasks,
+    dailyChecklistDoneByDate,
+  ] = await Promise.all([
+    getTasks(user.id),
+    getDayPlan(user.id, date),
+    getActiveHabitsByUser(user.id),
+    getEntriesByUserAndDateRange(user.id, start, addCalendarDays(start, 6)),
+    getNoteByUserAndDate(user.id, date),
+    getProjects(user.id),
+    db
+      .select()
+      .from(internshipApplications)
+      .where(
+        and(
+          eq(internshipApplications.userId, user.id),
+          lte(internshipApplications.followUpDate, date),
+          notInArray(internshipApplications.stage, ['saved', 'rejected', 'withdrawn', 'offer']),
+        ),
+      )
+      .orderBy(asc(internshipApplications.followUpDate))
+      .limit(1),
+    getMealTemplates(user.id),
+    getMealLogs(user.id, start, addCalendarDays(start, 6)),
+    db
+      .select()
+      .from(metricEntries)
+      .where(
+        and(
+          eq(metricEntries.userId, user.id),
+          eq(metricEntries.type, 'Body weight'),
+          eq(metricEntries.unit, 'kg'),
+          lte(metricEntries.date, date),
+        ),
+      )
+      .orderBy(desc(metricEntries.date), desc(metricEntries.createdAt))
+      .limit(1),
     getTaskCompletionKeys(user.id, date, date),
     getTaskChecklistDoneByDate(user.id, date, date),
   ]);
+  const latestWeight = weights[0] ?? null;
   const todayOccurrences = taskOccurrences(allTasks, date, date, completedTasks, settings.timezone);
   const todayWeight = latestWeight?.date === date ? latestWeight : null;
   const mode = dayPlan?.mode === 'minimum' || dayPlan?.mode === 'reduced' ? dayPlan.mode : 'normal';
