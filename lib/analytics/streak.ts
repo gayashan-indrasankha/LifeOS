@@ -12,21 +12,22 @@ export type StreakCompletion = DatedHabit & {
  * through the cutoff, including earlier months; future entries never count.
  */
 export function calculateStreaks(entries: StreakCompletion[], cutoff: string) {
-  const completedDates = new Set(
-    entries
-      .filter((entry) => {
-        if (entry.date > cutoff) return false;
-        const [year, month, day] = entry.date.split('-').map(Number);
-        const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
-        return isGridApplicable(
-          entry,
-          { date: entry.date, day, weekday: '', dayOfWeek: weekday },
-          [],
-          new Set(),
-        );
-      })
-      .map((entry) => entry.date),
-  );
+  const completedDates = new Set<string>();
+  for (const entry of entries) {
+    // One eligible completion establishes activity for the whole day.
+    if (entry.date > cutoff || completedDates.has(entry.date)) continue;
+    const [year, month, day] = entry.date.split('-').map(Number);
+    const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+    if (
+      isGridApplicable(
+        entry,
+        { date: entry.date, day, weekday: '', dayOfWeek: weekday },
+        [],
+        completedDates,
+      )
+    )
+      completedDates.add(entry.date);
+  }
 
   const dates = [...completedDates].sort();
   let best = 0;
