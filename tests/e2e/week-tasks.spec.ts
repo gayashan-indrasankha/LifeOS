@@ -17,19 +17,21 @@ test('Week stays focused on tasks', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Weekly workload' })).toHaveCount(0);
   const add = page.locator('form').filter({ has: page.getByRole('button', { name: 'Add task' }) });
   await add.locator('[name="title"]').fill('Prepare a presentation');
-  await add.locator('[name="scheduledDate"]').fill('2026-10-10');
+  // One-time tasks are shown on their completion day. Complete a task scheduled
+  // for the fixed test clock's current day so the persistence check stays on it.
+  await add.locator('[name="scheduledDate"]').fill('2026-10-08');
   await add.getByRole('button', { name: 'Add task' }).click();
-  const saturday = page
+  const thursday = page
     .getByRole('region', { name: 'Tasks by day' })
     .locator('div.rounded-2xl')
-    .filter({ has: page.getByRole('heading', { name: 'Sat, Oct 10' }) })
+    .filter({ has: page.getByRole('heading', { name: 'Thu, Oct 8' }) })
     .first();
-  await expect(saturday).toContainText('Prepare a presentation');
-  await saturday.getByRole('button', { name: 'Mark done' }).click();
-  await expect(saturday).toContainText('1 of 1 done');
+  await expect(thursday).toContainText('Prepare a presentation');
+  await thursday.getByRole('button', { name: 'Mark done' }).click();
+  await expect(thursday).toContainText('1 of 1 done');
   await page.reload();
-  await expect(saturday).toContainText('Prepare a presentation');
-  await expect(saturday).toContainText('1 of 1 done');
+  await expect(thursday).toContainText('Prepare a presentation');
+  await expect(thursday).toContainText('1 of 1 done');
 
   await page.goto('/goals');
   await page.getByText('Add a task').click();
@@ -55,14 +57,24 @@ test('Week stays focused on tasks', async ({ page }) => {
     .locator('div.rounded-2xl')
     .filter({ has: page.getByRole('heading', { name: 'Sun, Oct 11' }) })
     .first();
+  const monday = page
+    .getByRole('region', { name: 'Tasks by day' })
+    .locator('div.rounded-2xl')
+    .filter({ has: page.getByRole('heading', { name: 'Mon, Oct 5' }) })
+    .first();
+  await expect(monday).not.toContainText('Review notes');
   await sunday.getByText('Change day').click();
   const move = sunday
     .locator('form')
     .filter({ has: page.getByRole('button', { name: 'Save day' }) });
   await move.locator('[name="scheduledDate"]').fill('2026-10-05');
   await move.getByRole('button', { name: 'Save day' }).click();
-  await expect(sunday).not.toContainText('Review notes');
-  await expect(page.getByRole('region', { name: 'Tasks by day' })).toContainText('Review notes');
+  await expect(monday).toContainText('Review notes');
+  // Unfinished one-time tasks carry forward from their new start day.
+  await expect(sunday).toContainText('Review notes');
+  await page.reload();
+  await expect(monday).toContainText('Review notes');
+  await expect(sunday).toContainText('Review notes');
 
   await expect(page.getByRole('region', { name: 'Tasks by day' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Weekly workload' })).toHaveCount(0);
