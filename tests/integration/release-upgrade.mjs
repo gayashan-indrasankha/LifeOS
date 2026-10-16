@@ -11,12 +11,12 @@ import { drizzle as postgresDrizzle } from 'drizzle-orm/postgres-js';
 import { migrate as postgresMigrate } from 'drizzle-orm/postgres-js/migrator';
 
 const folder = 'lib/db/migrations';
-const boundaries = [2, 6, 7, 8, 10, 12, 13];
+const boundaries = [2, 6, 7, 8, 10, 12, 13, 23, 24, 25, 26, 27];
 const fullJournal = JSON.parse(await readFile(join(folder, 'meta', '_journal.json'), 'utf8'));
 const files = await readdir(folder);
 assert.equal(
   fullJournal.entries.length,
-  24,
+  28,
   'Review the fixture boundaries when migrations change.',
 );
 for (const [index, entry] of fullJournal.entries.entries()) {
@@ -70,6 +70,27 @@ async function fixture(query, boundary) {
     "INSERT INTO tasks (user_id,goal_id,project_id,title,area,is_milestone,status) VALUES ('owner',$1,$2,'Legacy milestone','Career',true,'done') RETURNING id",
     [goal.id, project.id],
   );
+  if (boundary >= 25) {
+    await query("UPDATE tasks SET recurrence='daily' WHERE id=$1", [task.id]);
+    await query(
+      "INSERT INTO task_completions (user_id,task_id,date) VALUES ('owner',$1,'2026-01-01')",
+      [task.id],
+    );
+  }
+  if (boundary >= 26) {
+    ids.checklistItem = randomUUID();
+    ids.checklist = JSON.stringify([
+      { id: ids.checklistItem, text: 'Preserve checklist progress', done: true },
+    ]);
+    await query('UPDATE tasks SET checklist=$1 WHERE id=$2', [ids.checklist, task.id]);
+  }
+  if (boundary >= 27) {
+    await query('UPDATE tasks SET checklist_reset_daily=true WHERE id=$1', [task.id]);
+    await query(
+      "INSERT INTO task_checklist_completions (user_id,task_id,item_id,date) VALUES ('owner',$1,$2,'2026-01-01')",
+      [task.id, ids.checklistItem],
+    );
+  }
   const [block] = await query(
     "INSERT INTO time_blocks (user_id,title,category,local_start_time,local_end_time,weekday_mask,start_date,goal_id,project_id,task_id) VALUES ('owner','Legacy block','Career','09:00','10:00','1000000','2026-01-01',$1,$2,$3) RETURNING id",
     [goal.id, project.id, task.id],
@@ -132,6 +153,8 @@ async function fixture(query, boundary) {
       "INSERT INTO interview_practices (user_id,topic_id,date,role_track,type) VALUES ('owner',$1,'2026-01-03','SE','mock') RETURNING id",
       [interviewTopic.id],
     );
+    if (boundary >= 17)
+      await query("UPDATE interview_practices SET topic_text='JOINs' WHERE id=$1", [interview.id]);
     Object.assign(ids, {
       application: application.id,
       stage: stage.id,
@@ -169,6 +192,23 @@ async function assertPreserved(query, ids, boundary, expectBackfill = true) {
   if (boundary < 3) return;
   assert.equal((await one('projects', ids.project)).goal_id, ids.goal);
   assert.equal((await one('tasks', ids.task)).project_id, ids.project);
+  const task = await one('tasks', ids.task);
+  assert.equal(task.recurrence, boundary >= 25 ? 'daily' : 'once');
+  assert.equal(task.checklist, boundary >= 26 ? ids.checklist : null);
+  assert.equal(task.checklist_reset_daily, boundary >= 27);
+  const completions = await query(
+    'SELECT date::text AS date FROM task_completions WHERE task_id=$1',
+    [ids.task],
+  );
+  assert.deepEqual(completions, boundary >= 25 ? [{ date: '2026-01-01' }] : []);
+  const checklistCompletions = await query(
+    'SELECT item_id,date::text AS date FROM task_checklist_completions WHERE task_id=$1',
+    [ids.task],
+  );
+  assert.deepEqual(
+    checklistCompletions,
+    boundary >= 27 ? [{ item_id: ids.checklistItem, date: '2026-01-01' }] : [],
+  );
   assert.equal((await one('time_block_exceptions', ids.exception)).block_id, ids.block);
   assert.equal(
     (
