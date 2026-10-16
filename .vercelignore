@@ -1,0 +1,17 @@
+.git
+.env*
+.next*
+.vercel
+.android-toolchain
+.desktop-test
+.local-embedded-db
+node_modules
+android
+android-stage
+desktop-stage
+dist-android
+dist-desktop
+coverage
+playwright-report
+test-results
+*.tsbuildinfo
