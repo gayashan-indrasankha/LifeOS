@@ -18,7 +18,7 @@
 <br>
 
 <p align="center">
-  <img src="docs/screenshots/today.png" alt="LifeOS Today page showing three ranked focus tasks and a start-here prompt" width="900">
+  <img src="docs/screenshots/dashboard.png" alt="LifeOS Home page with the monthly habit tracker, progress charts, streaks, journal preview and weight trend" width="900">
 </p>
 
 ## In 30 seconds
