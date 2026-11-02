@@ -1,5 +1,11 @@
 # LifeOS implementation plan
 
+## Current status (2026-11-02)
+
+The unchecked task lists under Phases 3, 4, 5 and 7 below are historical: each phase was superseded before its own verification, and its scope was then delivered and verified by later work. Habit management and ordering live in `components/habits/` and `lib/actions/habit-actions.ts`; the monthly tracker grid in `components/dashboard/`; streak, flexible weekly quota and month analytics in `lib/analytics/`; habit end dates and dated schedule revisions in `lib/validations/habit.ts` and `habit_schedule_revisions`. Each is covered by the unit, integration and browser suites listed in [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md).
+
+Of the 2026-10-08 "Remaining gaps", series rule changes are handled by time-block revisions, habit schedule edits no longer rewrite earlier months, backups can be imported (restore or merge), and Review shows a weight trend. The starter template still does not configure training/rest alternation, monthly travel days, commute buffers or reminder notifications.
+
 ## P4 release verification update (2026-10-09)
 
 The current branch includes P0 scheduling, P1 editing and priority management, P2 flexible planning, and P3 evidence workflows. The P4 regression suite now covers authentication and owner isolation, those workflows, export, five responsive widths, genuine historical PostgreSQL/PGlite upgrades through migration `0014`, and a packaged Windows restart with persistent data. The current run results and any remaining release limits are recorded in [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md). Production migration and deployment remain separate approval steps.
