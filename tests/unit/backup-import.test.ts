@@ -47,6 +47,17 @@ describe('LifeOS backup restore', () => {
     expect(await response.json()).not.toHaveProperty('error', 'Import must come from this app.');
   });
 
+  it('rejects a backup request without an Origin header', async () => {
+    const response = await POST(
+      new Request('http://localhost:43123/api/import', {
+        method: 'POST',
+        headers: { Host: 'localhost:43123', 'Content-Type': 'application/json' },
+        body: '{}',
+      }),
+    );
+    expect(response.status).toBe(403);
+  });
+
   it('rejects a backup request from another origin', async () => {
     const response = await POST(
       new Request('http://localhost:43123/api/import', {
@@ -113,7 +124,7 @@ describe('LifeOS backup restore', () => {
     const imported = await POST(
       new Request('http://localhost/api/import', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { Origin: 'http://localhost', 'Content-Type': 'application/json' },
         body: backup,
       }),
     );
@@ -165,7 +176,7 @@ describe('LifeOS backup restore', () => {
     const result = await POST(
       new Request('http://localhost/api/import', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { Origin: 'http://localhost', 'Content-Type': 'application/json' },
         body: JSON.stringify(backup),
       }),
     );
@@ -194,7 +205,7 @@ describe('LifeOS backup restore', () => {
     const response = await POST(
       new Request('http://localhost/api/import', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { Origin: 'http://localhost', 'Content-Type': 'application/json' },
         body: JSON.stringify(backup),
       }),
     );

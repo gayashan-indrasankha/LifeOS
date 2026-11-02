@@ -423,7 +423,9 @@ export async function deleteTaskAction(
       )
         return 'has-history';
 
-      const [criteria, review, reviewHistory] = await Promise.all([
+      // Repeating tasks record each finished day in their own tables, which
+      // cascade on delete, so check them alongside the milestone history.
+      const [criteria, review, reviewHistory, occurrences, checklistDays] = await Promise.all([
         tx
           .select({ id: milestoneCriteria.id })
           .from(milestoneCriteria)
@@ -444,8 +446,30 @@ export async function deleteTaskAction(
             ),
           )
           .limit(1),
+        tx
+          .select({ taskId: taskCompletions.taskId })
+          .from(taskCompletions)
+          .where(and(eq(taskCompletions.userId, userId), eq(taskCompletions.taskId, task.id)))
+          .limit(1),
+        tx
+          .select({ taskId: taskChecklistCompletions.taskId })
+          .from(taskChecklistCompletions)
+          .where(
+            and(
+              eq(taskChecklistCompletions.userId, userId),
+              eq(taskChecklistCompletions.taskId, task.id),
+            ),
+          )
+          .limit(1),
       ]);
-      if (criteria.length || review.length || reviewHistory.length) return 'has-history';
+      if (
+        criteria.length ||
+        review.length ||
+        reviewHistory.length ||
+        occurrences.length ||
+        checklistDays.length
+      )
+        return 'has-history';
 
       await tx.delete(tasks).where(and(eq(tasks.userId, userId), eq(tasks.id, task.id)));
       if (task.dailyPriority && task.scheduledDate) {
@@ -864,6 +888,10 @@ export async function managePriorityAction(
         .limit(1);
       if (!target || (target.status === 'cancelled' && parsed.data.operation !== 'remove'))
         throw new Error('Task is unavailable.');
+      // Assigning a priority moves scheduledDate, which is a repeating task's
+      // series start, so only one-off tasks can hold a daily slot.
+      if (target.recurrence !== 'once' && parsed.data.operation !== 'remove')
+        throw new Error('Repeating tasks cannot be daily priorities.');
       const destination = await tx
         .select()
         .from(tasks)
@@ -947,6 +975,7 @@ export async function managePriorityAction(
           'This task is already a priority.',
           'Choose an empty priority slot.',
           'Choose an occupied priority to replace.',
+          'Repeating tasks cannot be daily priorities.',
         ].includes(error.message)
         ? error.message
         : 'Priority changed elsewhere. Refresh and try again.',
