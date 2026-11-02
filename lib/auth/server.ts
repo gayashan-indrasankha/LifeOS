@@ -2,7 +2,7 @@
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '@/lib/db';
 import * as schema from '@/lib/db/schema';
-import { parseServerEnv } from '@/lib/env';
+import { parseServerEnv, previewOrigins } from '@/lib/env';
 
 const env = parseServerEnv(process.env);
 
@@ -26,7 +26,9 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24 * 7,
     updateAge: 60 * 60 * 24,
   },
-  trustedOrigins: [new URL(env.BETTER_AUTH_URL).origin],
+  trustedOrigins: [
+    ...new Set([new URL(env.BETTER_AUTH_URL).origin, ...previewOrigins(process.env)]),
+  ],
 });
 
 export type Session = typeof auth.$Infer.Session;
