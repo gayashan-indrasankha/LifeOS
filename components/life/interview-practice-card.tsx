@@ -124,6 +124,7 @@ export function InterviewPracticeCard({
             Target role
             <select name="roleTrack" defaultValue={practice.roleTrack} className={field}>
               <option value="SE">SE</option>
+              <option value="AI">AI</option>
               <option value="DevOps">DevOps</option>
               <option value="QA">QA</option>
             </select>

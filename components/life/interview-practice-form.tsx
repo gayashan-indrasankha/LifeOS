@@ -28,6 +28,7 @@ export function InterviewPracticeForm({ today }: { today: string }) {
         Target role
         <select name="roleTrack" defaultValue="SE" className={field}>
           <option value="SE">SE</option>
+          <option value="AI">AI</option>
           <option value="DevOps">DevOps</option>
           <option value="QA">QA</option>
         </select>

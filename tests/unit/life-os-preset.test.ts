@@ -3,6 +3,15 @@ import { goals, habits, meals, projects, tasks, topics, sectionLabels } from '@/
 import { LIFE_AREAS } from '@/lib/life-areas';
 
 describe('Personal Life OS preset', () => {
+  it('targets software engineering and AI engineering roles', () => {
+    expect(sectionLabels.career).toBe('Software Engineering and AI Engineering');
+    expect(goals.map((goal) => goal.key)).toContain('ai-portfolio');
+    expect(projects.map((project) => project.key)).toContain('ai-project');
+    expect(topics.filter((topic) => topic.track === 'AI')).toHaveLength(6);
+    const text = JSON.stringify({ sectionLabels, goals, projects, tasks, topics });
+    expect(text).not.toMatch(/devops|internship/i);
+  });
+
   it('uses current life areas and unique keys', () => {
     for (const goal of goals) expect(LIFE_AREAS).toContain(goal.area);
     for (const habit of habits) expect(LIFE_AREAS).toContain(habit.category);
