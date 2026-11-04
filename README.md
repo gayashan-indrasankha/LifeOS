@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="public/LifeOS_Flowing_Wave_Light.svg" alt="LifeOS logo" width="360">
+<img src="docs/branding/lifeos-logo-readme-dark.png" alt="LifeOS logo" width="360">
 
 ### A full-stack personal operating system that connects long-term goals to today's work — and shows what actually happened.
 
@@ -18,7 +18,7 @@
 <br>
 
 <p align="center">
-  <img src="docs/screenshots/dashboard.png" alt="LifeOS Home page with the monthly habit tracker, progress charts, streaks, journal preview and weight trend" width="900">
+  <img src="docs/screenshots/hero.webp" alt="LifeOS on web and mobile: the Home page monthly habit tracker alongside the Today page on a phone" width="900">
 </p>
 
 ## In 30 seconds
