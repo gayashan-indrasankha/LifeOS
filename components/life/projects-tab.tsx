@@ -79,6 +79,7 @@ export function ProjectsTab({
               <option>General</option>
               <option>UCSC Industry Project</option>
               <option>Software Engineering Portfolio</option>
+              <option>AI Engineering Portfolio</option>
               <option>DevOps Portfolio</option>
             </select>
           </label>

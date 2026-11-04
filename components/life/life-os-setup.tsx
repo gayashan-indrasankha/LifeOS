@@ -10,8 +10,8 @@ import type { Plan } from '@/lib/life-os/install';
 const sectionDetails: Record<keyof typeof sectionLabels, string> = {
   university: 'An education goal, five editable subjects, starter tasks and a study habit.',
   industry: 'A project goal and milestones you can assign to days in Week.',
-  career: 'Software Engineering and DevOps goals, projects and milestones.',
-  interview: 'SE and DevOps topic starters for recording real practice in Evidence.',
+  career: 'Software Engineering and AI Engineering goals, projects and milestones.',
+  interview: 'SE and AI topic starters for recording real practice in Evidence.',
   english: 'A speaking goal and habit; record actual practice in Evidence.',
   fitness: 'A weight goal and gym and weigh-in habits; record measurements on Today.',
   nutrition: 'Six blank meal slots to plan in Settings and log on Today.',

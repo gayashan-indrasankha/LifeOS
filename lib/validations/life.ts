@@ -30,6 +30,7 @@ export const ProjectSchema = z.object({
     'UCSC Industry Project',
     'Software Engineering Portfolio',
     'DevOps Portfolio',
+    'AI Engineering Portfolio',
     'General',
   ]),
   goalId: optionalId,

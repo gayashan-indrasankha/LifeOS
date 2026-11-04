@@ -336,6 +336,7 @@ export default async function EvidencePage({
               Track
               <select name="roleTrack" className={field}>
                 <option>SE</option>
+                <option>AI</option>
                 <option>DevOps</option>
                 <option>QA</option>
                 <option>Other</option>
@@ -394,6 +395,7 @@ export default async function EvidencePage({
                 <select name="track" defaultValue={query.track ?? ''} className={field}>
                   <option value="">All tracks</option>
                   <option>SE</option>
+                  <option>AI</option>
                   <option>DevOps</option>
                   <option>QA</option>
                   <option>Other</option>
@@ -525,6 +527,7 @@ export default async function EvidencePage({
                       Track
                       <select name="roleTrack" defaultValue={item.roleTrack} className={field}>
                         <option>SE</option>
+                        <option>AI</option>
                         <option>DevOps</option>
                         <option>QA</option>
                         <option>Other</option>

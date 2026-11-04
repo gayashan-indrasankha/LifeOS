@@ -1,10 +1,10 @@
 export const PRESET_ID = 'personal-life-os';
-export const PRESET_VERSION = 3;
+export const PRESET_VERSION = 4;
 
 export const sectionLabels = {
   university: 'University',
   industry: 'UCSC Industry Project',
-  career: 'Software Engineering and DevOps',
+  career: 'Software Engineering and AI Engineering',
   interview: 'Interview preparation',
   english: 'English communication',
   fitness: 'Fitness and recovery',
@@ -33,7 +33,7 @@ export type HabitPreset = Item & {
   target: number;
   description?: string;
 };
-export type TopicPreset = Item & { category: string; track: 'Shared' | 'SE' | 'DevOps' };
+export type TopicPreset = Item & { category: string; track: 'Shared' | 'SE' | 'AI' };
 export type MealPreset = Item & { order: number; notes?: string };
 
 export const goals: GoalPreset[] = [
@@ -55,19 +55,19 @@ export const goals: GoalPreset[] = [
     key: 'se-portfolio',
     section: 'career',
     area: 'Career',
-    name: 'Become ready for a Software Engineering internship',
+    name: 'Become ready for a Software Engineering role',
   },
   {
-    key: 'devops-portfolio',
+    key: 'ai-portfolio',
     section: 'career',
     area: 'Career',
-    name: 'Become ready for a DevOps internship',
+    name: 'Become ready for an AI Engineering role',
   },
   {
     key: 'interviews',
     section: 'interview',
     area: 'Career',
-    name: 'Prepare for SE and DevOps internship interviews',
+    name: 'Prepare for Software Engineering and AI Engineering interviews',
   },
   {
     key: 'communication',
@@ -108,11 +108,11 @@ export const projects: ProjectPreset[] = [
     name: 'Software Engineering Portfolio Project',
   },
   {
-    key: 'devops-project',
+    key: 'ai-project',
     section: 'career',
-    goal: 'devops-portfolio',
-    type: 'DevOps Portfolio',
-    name: 'DevOps Portfolio Project',
+    goal: 'ai-portfolio',
+    type: 'AI Engineering Portfolio',
+    name: 'AI Engineering Portfolio Project',
   },
 ];
 
@@ -159,15 +159,15 @@ export const tasks: TaskPreset[] = [
     'Prepare demonstration and deployment instructions',
     'Practise explaining technical trade-offs',
   ]),
-  ...milestone('career', 'devops-project', [
-    'Linux and networking fundamentals',
-    'Containerize a real application',
-    'Implement CI automation',
-    'Understand cloud deployment basics',
-    'Add Infrastructure-as-Code when appropriate',
-    'Set up logging and monitoring',
-    'Test failure and recovery behavior',
-    'Document architecture and reproducible setup',
+  ...milestone('career', 'ai-project', [
+    'Choose a real problem for an AI feature',
+    'Define success criteria and an evaluation set',
+    'Build a first end-to-end model integration',
+    'Add retrieval or tool use where it helps',
+    'Add automated evaluations',
+    'Add guardrails and input validation',
+    'Handle model failures, latency and cost',
+    'Document architecture and model decisions',
     'Prepare a technical demonstration',
   ]),
 ];
@@ -260,13 +260,13 @@ const se = [
   'Authentication and authorization',
   'Software architecture fundamentals',
 ];
-const devops = [
-  'Linux commands',
-  'Docker',
-  'CI/CD',
-  'Cloud fundamentals',
-  'Networking troubleshooting',
-  'Monitoring and Infrastructure-as-Code',
+const ai = [
+  'Machine learning fundamentals',
+  'LLMs and prompt design',
+  'Embeddings and retrieval (RAG)',
+  'Agents and tool use',
+  'Model evaluation',
+  'Deploying AI systems: latency, cost and safety',
 ];
 export const topics: TopicPreset[] = [
   ...shared.map((name, index) => ({
@@ -283,12 +283,12 @@ export const topics: TopicPreset[] = [
     name,
     track: 'SE' as const,
   })),
-  ...devops.map((name, index) => ({
-    key: `interview-devops-${index + 1}`,
+  ...ai.map((name, index) => ({
+    key: `interview-ai-${index + 1}`,
     section: 'interview' as const,
-    category: 'DevOps',
+    category: 'AI Engineering',
     name,
-    track: 'DevOps' as const,
+    track: 'AI' as const,
   })),
 ];
 

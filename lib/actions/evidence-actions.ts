@@ -328,7 +328,7 @@ export async function addInterviewPracticeAction(
     .object({
       topic: z.string().trim().min(1).max(160),
       date: z.iso.date(),
-      roleTrack: z.enum(['SE', 'DevOps', 'QA']),
+      roleTrack: z.enum(['SE', 'AI', 'DevOps', 'QA']),
       type: z.enum(['mock', 'technical_question', 'coding', 'explanation']),
       durationMinutes: z.coerce.number().int().min(1).max(1440),
     })
@@ -359,7 +359,7 @@ export async function updateInterviewPracticeAction(
       id: z.uuid(),
       date: z.iso.date(),
       topic: z.string().trim().min(1).max(160),
-      roleTrack: z.enum(['SE', 'DevOps', 'QA']),
+      roleTrack: z.enum(['SE', 'AI', 'DevOps', 'QA']),
       type: z.enum(['mock', 'technical_question', 'coding', 'explanation']),
       durationMinutes: optionalMinutes,
     })
@@ -737,7 +737,7 @@ export async function saveApplicationAction(
       id: optionalId,
       company: title,
       roleTitle: title,
-      roleTrack: z.enum(['SE', 'DevOps', 'QA', 'Other']),
+      roleTrack: z.enum(['SE', 'AI', 'DevOps', 'QA', 'Other']),
       stage: z.union([stages, z.literal('')]).transform((item) => item || null),
       stageOn: optionalDate,
       url: optionalUrl,

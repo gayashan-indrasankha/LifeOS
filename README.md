@@ -381,4 +381,4 @@ I'm **Gayashan Indrasankha**, a software engineer who enjoys owning a product fr
 - **Frontend craft** — accessible, responsive React Server Components with careful attention to performance.
 - **Engineering discipline** — automated tests at every layer, CI gates, measured performance work and documentation.
 
-I'm open to **software engineering and DevOps internship / graduate roles**. Let's connect on [GitHub](https://github.com/gayashan-indrasankha).
+I'm open to **software engineering and AI engineering roles**. Let's connect on [GitHub](https://github.com/gayashan-indrasankha).
